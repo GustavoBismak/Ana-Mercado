@@ -1,17 +1,39 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ana Mercado</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --theme-color: {{ settings.theme_color }};
-            --font-family: {{ settings.font_family }};
-            --font-size: {{ settings.font_size }}px;
+            --theme-color: {
+                    {
+                    settings.theme_color
+                }
+            }
+
+            ;
+
+            --font-family: {
+                    {
+                    settings.font_family
+                }
+            }
+
+            ;
+
+            --font-size: {
+                    {
+                    settings.font_size
+                }
+            }
+
+            px;
         }
 
         body {
@@ -27,7 +49,7 @@
             height: 100vh;
             width: 300px;
             background-color: white;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
             transition: left 0.3s ease;
             z-index: 1000;
             padding: 20px;
@@ -51,7 +73,7 @@
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .total-display {
@@ -62,7 +84,7 @@
             color: white;
             padding: 10px 20px;
             border-radius: 25px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             z-index: 1000;
         }
 
@@ -79,7 +101,7 @@
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
             transition: transform 0.3s ease;
         }
 
@@ -97,9 +119,17 @@
         }
 
         @keyframes checkmark {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(0);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .overlay {
@@ -117,8 +147,13 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .checkmark {
@@ -151,19 +186,31 @@
         }
 
         @keyframes stroke {
-            100% { stroke-dashoffset: 0; }
+            100% {
+                stroke-dashoffset: 0;
+            }
         }
 
         @keyframes scale {
-            0%, 100% { transform: none; }
-            50% { transform: scale3d(1.1, 1.1, 1); }
+
+            0%,
+            100% {
+                transform: none;
+            }
+
+            50% {
+                transform: scale3d(1.1, 1.1, 1);
+            }
         }
 
         @keyframes fill {
-            100% { box-shadow: inset 0px 0px 0px 30px #fff; }
+            100% {
+                box-shadow: inset 0px 0px 0px 30px #fff;
+            }
         }
     </style>
 </head>
+
 <body>
     <!-- Botão do Menu -->
     <button class="btn btn-primary sidebar-toggle" onclick="toggleSidebar()">
@@ -173,9 +220,8 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="text-center mb-4">
-            <img src="{{ url_for('static', filename=settings.profile_pic) if settings.profile_pic else 'https://via.placeholder.com/100' }}" 
-                 alt="Foto de Perfil" 
-                 class="profile-pic">
+            <img src="{{ url_for('static', filename=settings.profile_pic) if settings.profile_pic else 'https://via.placeholder.com/100' }}"
+                alt="Foto de Perfil" class="profile-pic">
             <h4>Ana Mercado</h4>
         </div>
 
@@ -193,22 +239,47 @@
                 <div class="mb-3">
                     <label class="form-label">Fonte</label>
                     <select name="font_family" class="form-control">
-                        <option value="Poppins" {{ 'selected' if settings.font_family == 'Poppins' }}>Poppins</option>
-                        <option value="Roboto" {{ 'selected' if settings.font_family == 'Roboto' }}>Roboto</option>
-                        <option value="Open Sans" {{ 'selected' if settings.font_family == 'Open Sans' }}>Open Sans</option>
+                        <option value="Poppins" {{ 'selected' if settings.font_family=='Poppins' }}>Poppins</option>
+                        <option value="Roboto" {{ 'selected' if settings.font_family=='Roboto' }}>Roboto</option>
+                        <option value="Open Sans" {{ 'selected' if settings.font_family=='Open Sans' }}>Open Sans
+                        </option>
                     </select>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Tamanho da Fonte</label>
                     <input type="number" name="font_size" class="form-control" value="{{ settings.font_size }}">
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Salvar</button>
+                <button type="submit" class="btn btn-primary w-100 mb-3">Salvar Configurações</button>
+            </form>
+
+            <hr class="my-4">
+
+            <h5>Segurança</h5>
+            <form action="{{ url_for('change_password') }}" method="POST">
+                <div class="mb-2">
+                    <input type="password" name="current_password" class="form-control form-control-sm"
+                        placeholder="Senha Atual" required>
+                </div>
+                <div class="mb-2">
+                    <input type="password" name="new_password" class="form-control form-control-sm"
+                        placeholder="Nova Senha" required>
+                </div>
+                <div class="mb-3">
+                    <input type="password" name="confirm_password" class="form-control form-control-sm"
+                        placeholder="Confirmar Nova Senha" required>
+                </div>
+                <button type="submit" class="btn btn-outline-danger w-100 btn-sm">
+                    <i class="fas fa-key"></i> Alterar Senha
+                </button>
             </form>
         </div>
 
         <div class="mb-4">
-            <a href="{{ url_for('history') }}" class="btn btn-outline-primary w-100">
+            <a href="{{ url_for('history') }}" class="btn btn-outline-primary w-100 mb-2">
                 <i class="fas fa-history"></i> Histórico
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger w-100">
+                <i class="fas fa-sign-out-alt"></i> Sair
             </a>
         </div>
     </div>
@@ -224,7 +295,8 @@
                     <div class="card-body">
                         <form action="{{ url_for('create_list') }}" method="POST">
                             <div class="input-group">
-                                <input type="text" name="name" class="form-control" placeholder="Nome da nova lista" required>
+                                <input type="text" name="name" class="form-control" placeholder="Nome da nova lista"
+                                    required>
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-plus"></i> Criar Lista
                                 </button>
@@ -242,7 +314,8 @@
                             <a href="{{ url_for('view_list', list_id=list.id) }}" class="btn btn-outline-primary">
                                 <i class="fas fa-eye"></i> Ver Lista
                             </a>
-                            <form action="{{ url_for('complete_list', list_id=list.id) }}" method="POST" class="d-inline">
+                            <form action="{{ url_for('complete_list', list_id=list.id) }}" method="POST"
+                                class="d-inline">
                                 <button type="submit" class="btn btn-success" onclick="showCompletionOverlay()">
                                     <i class="fas fa-check"></i> Finalizar
                                 </button>
@@ -259,8 +332,8 @@
     <!-- Overlay de Conclusão -->
     <div class="overlay" id="completionOverlay">
         <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
-            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" />
+            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
         </svg>
     </div>
 
@@ -279,7 +352,7 @@
         }
 
         // Fechar sidebar ao clicar fora
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const sidebar = document.querySelector('.sidebar');
             const sidebarToggle = document.querySelector('.sidebar-toggle');
             if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
@@ -288,4 +361,5 @@
         });
     </script>
 </body>
-</html> 
+
+</html>
