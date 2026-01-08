@@ -1,0 +1,26 @@
+[Unit]
+Description=Gunicorn instance to serve Ana Mercado App
+After=network.target
+
+[Service]
+# Usuario do sistema que vai rodar o app
+User=bismakgustavo3
+# Grupo (geralmente o mesmo do usuario)
+Group=bismakgustavo3
+
+# Pasta onde esta o projeto
+WorkingDirectory=/opt/ana-mercado/Ana-Mercado
+
+# Variaveis de Ambiente
+Environment="PATH=/opt/ana-mercado/Ana-Mercado/venv/bin"
+Environment="PORT=443"
+
+# Comando de inicializacao (usando o python do venv diretamente)
+# ExecStart deve usar caminho absoluto
+ExecStart=/opt/ana-mercado/Ana-Mercado/venv/bin/python /opt/ana-mercado/Ana-Mercado/app.py
+
+# Reiniciar automaticamente se cair
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
