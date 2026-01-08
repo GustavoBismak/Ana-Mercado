@@ -566,6 +566,11 @@ def init_db():
             
         db.session.commit()
 
+# Initialize DB immediately (so Gunicorn creates tables)
+try:
+    init_db()
+except Exception as e:
+    print(f"Error initializing DB: {e}")
+
 if __name__ == '__main__':
-    init_db()  # Initialize database
     app.run(debug=True, host='0.0.0.0', port=5000)

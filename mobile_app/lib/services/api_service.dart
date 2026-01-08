@@ -7,11 +7,31 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/shopping_list.dart';
 import '../models/item.dart';
 
+import 'package:flutter/foundation.dart'; // Import for kIsWeb
+
 class ApiService {
   // Use local IP for physical device testing
   // Make sure your phone and PC are on the same Wi-Fi
-  static const String baseUrl = 'http://192.168.3.15:5000/api';
-  static const String baseUrlRaw = 'http://192.168.3.15:5000'; // For accessing static files
+  // For Web, we use the current window origin
+  static String get baseUrl {
+    if (kIsWeb) {
+      if (Uri.base.origin.contains('localhost') || Uri.base.origin.contains('127.0.0.1')) {
+         return 'http://192.168.3.15:5000/api'; // Dev Mode fallback if needed
+      }
+      return '${Uri.base.origin}/api';
+    }
+    return 'http://192.168.3.15:5000/api';
+  }
+
+  static String get baseUrlRaw {
+    if (kIsWeb) {
+       if (Uri.base.origin.contains('localhost') || Uri.base.origin.contains('127.0.0.1')) {
+         return 'http://192.168.3.15:5000'; 
+      }
+      return Uri.base.origin;
+    }
+    return 'http://192.168.3.15:5000';
+  }
 
   static Future<Map<String, dynamic>> getDashboard() async {
     final response = await http.get(Uri.parse('$baseUrl/dashboard'));
