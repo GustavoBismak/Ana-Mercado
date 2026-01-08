@@ -8,6 +8,7 @@ from collections import defaultdict
 import calendar
 import locale
 import os
+import random
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__, static_folder='mobile_app/build/web', template_folder='mobile_app/build/web')
@@ -424,7 +425,21 @@ def api_get_categories(current_api_user):
 def api_create_category(current_api_user):
     data = request.get_json()
     name = data.get('name')
-    color = data.get('color', '#9E9E9E') # Default Gray
+    
+    # curated list of vibrant/pastel colors excluding gray
+    nice_colors = [
+        '#EF5350', '#EC407A', '#AB47BC', '#7E57C2', '#5C6BC0', 
+        '#42A5F5', '#29B6F6', '#26C6DA', '#26A69A', '#66BB6A', 
+        '#9CCC65', '#D4E157', '#FFEE58', '#FFCA28', '#FFA726', 
+        '#FF7043', '#8D6E63', '#78909C'
+    ]
+    
+    # If color not provided or is default gray, pick random
+    provided_color = data.get('color')
+    if not provided_color or provided_color == '#9E9E9E':
+        color = random.choice(nice_colors)
+    else:
+        color = provided_color
 
     if not name:
         return jsonify({'error': 'Nome obrigatório'}), 400
@@ -432,7 +447,7 @@ def api_create_category(current_api_user):
     category = Category(name=name, color=color, user_id=current_api_user.id)
     db.session.add(category)
     db.session.commit()
-    return jsonify({'message': 'Categoria criada', 'id': category.id}), 201
+    return jsonify({'message': 'Categoria criada', 'id': category.id, 'color': color}), 201
 
 @app.route('/api/categories/<int:cat_id>', methods=['PUT'])
 @token_required
