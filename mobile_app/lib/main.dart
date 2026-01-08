@@ -3,8 +3,15 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart';
 import 'providers/theme_provider.dart';
+import 'services/api_service.dart';
 
-void main() {
+Future<void> main() async {
+  try {
+    final dashboard = await ApiService.getDashboard();
+    print('DASHBOARD => $dashboard');
+  } catch (e) {
+    print('DASHBOARD ERROR => $e');
+  }
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),

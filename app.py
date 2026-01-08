@@ -10,9 +10,19 @@ import locale
 import os
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='mobile_app/build/web', template_folder='mobile_app/build/web')
 # Enable CORS for all routes (allows Flutter Web to talk to Python)
 CORS(app)
+
+@app.route('/')
+def serve_flutter_app():
+    return render_template('index.html')
+
+@app.route('/<path:path>')
+def catch_all(path):
+    if path.startswith('api') or path.startswith('static'):
+        return jsonify({'error': 'Not found'}), 404
+    return render_template('index.html')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ana_mercado_v6.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

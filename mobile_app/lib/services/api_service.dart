@@ -10,8 +10,18 @@ import '../models/item.dart';
 class ApiService {
   // Use local IP for physical device testing
   // Make sure your phone and PC are on the same Wi-Fi
-  static const String baseUrl = 'http://127.0.0.1:5000/api';
-  static const String baseUrlRaw = 'http://127.0.0.1:5000'; // For accessing static files
+  static const String baseUrl = 'http://192.168.3.15:5000/api';
+  static const String baseUrlRaw = 'http://192.168.3.15:5000'; // For accessing static files
+
+  static Future<Map<String, dynamic>> getDashboard() async {
+    final response = await http.get(Uri.parse('$baseUrl/dashboard'));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Erro ao buscar dashboard');
+    }
+  }
 
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
