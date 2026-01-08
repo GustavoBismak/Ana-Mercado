@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_cors import CORS
@@ -16,13 +16,20 @@ CORS(app)
 
 @app.route('/')
 def serve_flutter_app():
-    return render_template('index.html')
+    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/<path:path>')
 def catch_all(path):
-    if path.startswith('api') or path.startswith('static'):
+    if path.startswith('api'):
         return jsonify({'error': 'Not found'}), 404
-    return render_template('index.html')
+    
+    # Check if file exists in static folder (build/web)
+    full_path = os.path.join(app.static_folder, path)
+    if os.path.exists(full_path) and os.path.isfile(full_path):
+        return send_from_directory(app.static_folder, path)
+
+    # Otherwise return index.html for Flutter routing
+    return send_from_directory(app.static_folder, 'index.html')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ana_mercado_v6.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
