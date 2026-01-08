@@ -20,7 +20,7 @@ class ApiService {
       }
       return '${Uri.base.origin}/api';
     }
-    return 'http://192.168.3.15:5000/api';
+    return 'https://anamercado.duckdns.org/api';
   }
 
   static String get baseUrlRaw {
@@ -30,7 +30,7 @@ class ApiService {
       }
       return Uri.base.origin;
     }
-    return 'http://192.168.3.15:5000';
+    return 'https://anamercado.duckdns.org';
   }
 
   static Future<Map<String, dynamic>> getDashboard() async {

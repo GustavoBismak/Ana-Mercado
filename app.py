@@ -577,5 +577,17 @@ except Exception as e:
     print(f"Error initializing DB: {e}")
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    # SSL Configuration
+    cert_path = '/etc/letsencrypt/live/anamercado.duckdns.org/fullchain.pem'
+    key_path = '/etc/letsencrypt/live/anamercado.duckdns.org/privkey.pem'
+    
+    context = None
+    default_port = 5000
+
+    if os.path.exists(cert_path) and os.path.exists(key_path):
+        context = (cert_path, key_path)
+        default_port = 443
+        print("Running in HTTPS mode!")
+    
+    port = int(os.environ.get('PORT', default_port))
+    app.run(debug=True, host='0.0.0.0', port=port, ssl_context=context)
