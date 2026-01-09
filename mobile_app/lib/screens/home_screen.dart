@@ -24,6 +24,8 @@ class HomeScreen extends StatefulWidget {
     this.initialDisplayName,
   });
 
+  bool get isGuest => userId == -1;
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -337,39 +339,52 @@ class _HomeScreenState extends State<HomeScreen> {
             const Divider(),
 
             ListTile(
-              leading: const Icon(Icons.exit_to_app, color: Colors.red),
-              title: const Text('Sair', style: TextStyle(color: Colors.red)),
+              leading: Icon(
+                widget.isGuest ? Icons.login : Icons.exit_to_app,
+                color: widget.isGuest ? Colors.green : Colors.red,
+              ),
+              title: Text(
+                widget.isGuest ? 'Fazer Login' : 'Sair',
+                style: TextStyle(color: widget.isGuest ? Colors.green : Colors.red),
+              ),
               onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: const Text('Confirmar Saída'),
-                      content: const Text('Você tem certeza que deseja sair?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancelar'),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            Navigator.pop(context); // Close dialog
-                            
-                            // Clear SharedPreferences
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.clear();
-
-                            if (!mounted) return;
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (context) => const LoginScreen()),
-                            );
-                          },
-                          child: const Text('Sair', style: TextStyle(color: Colors.red)),
-                        ),
-                      ],
+                if (widget.isGuest) {
+                    Navigator.pop(context); // Close Drawer
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
                     );
-                  },
-                );
+                } else {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text('Confirmar Saída'),
+                          content: const Text('Você tem certeza que deseja sair?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                Navigator.pop(context); // Close dialog
+                                
+                                // Clear SharedPreferences
+                                final prefs = await SharedPreferences.getInstance();
+                                await prefs.clear();
+
+                                if (!mounted) return;
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                                );
+                              },
+                              child: const Text('Sair', style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                }
               },
             ),
           ],

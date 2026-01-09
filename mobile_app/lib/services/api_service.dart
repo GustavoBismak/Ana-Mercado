@@ -20,7 +20,8 @@ class ApiService {
       }
       return '${Uri.base.origin}/api';
     }
-    return 'https://anamercado.duckdns.org/api';
+    // Mobile/Emulator - Local Network IP
+    return 'http://192.168.3.15:5000/api';
   }
 
   static String get baseUrlRaw {
@@ -30,7 +31,7 @@ class ApiService {
       }
       return Uri.base.origin;
     }
-    return 'https://anamercado.duckdns.org';
+    return 'http://192.168.3.15:5000';
   }
 
   static Future<Map<String, dynamic>> getDashboard() async {
@@ -158,6 +159,8 @@ class ApiService {
   }
 
   Future<List<ShoppingList>> getLists(int userId, {bool completed = false}) async {
+    if (userId == -1) return []; // Guest Mode
+
     final response = await http.get(
       Uri.parse('$baseUrl/lists?user_id=$userId&completed=$completed'),
       headers: await _getHeaders(),
@@ -215,6 +218,10 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getDashboardStats(int userId, {String? month}) async {
+    if (userId == -1) {
+      return {'category_spend': [], 'monthly_spend': []}; // Guest Mode
+    }
+
     String url = '$baseUrl/dashboard?user_id=$userId';
     if (month != null) {
       url += '&month=$month';
@@ -265,6 +272,8 @@ class ApiService {
   }
 
   Future<List<dynamic>> getCategories(int userId) async {
+    if (userId == -1) return []; // Guest Mode
+
     final response = await http.get(
       Uri.parse('$baseUrl/categories?user_id=$userId'),
       headers: await _getHeaders(),
