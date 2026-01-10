@@ -15,9 +15,8 @@ class ApiService {
   // For Web, we use the current window origin
   static String get baseUrl {
     if (kIsWeb) {
-      if (Uri.base.origin.contains('localhost') || Uri.base.origin.contains('127.0.0.1')) {
-         return 'http://192.168.3.15:5000/api'; // Dev Mode fallback if needed
-      }
+      // On Web, always use the current origin (e.g. localhost:5000 or production domain)
+      // This matches where the backend is serving the files from.
       return '${Uri.base.origin}/api';
     }
     // Mobile/Emulator - Local Network IP
@@ -26,9 +25,6 @@ class ApiService {
 
   static String get baseUrlRaw {
     if (kIsWeb) {
-       if (Uri.base.origin.contains('localhost') || Uri.base.origin.contains('127.0.0.1')) {
-         return 'http://192.168.3.15:5000'; 
-      }
       return Uri.base.origin;
     }
     return 'http://192.168.3.15:5000';

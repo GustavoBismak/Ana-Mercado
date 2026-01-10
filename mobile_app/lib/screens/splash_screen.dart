@@ -53,9 +53,16 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         MaterialPageRoute(builder: (context) => HomeScreen(username: username, userId: userId)),
       );
     } else {
+      // Guest Mode (Modified to skip LoginScreen)
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(
+            username: 'Convidado',
+            userId: -1,
+            initialDisplayName: 'Convidado',
+          ),
+        ),
       );
     }
   }
@@ -83,10 +90,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   children: [
                     // Display the App Icon
                     // Assuming assets/icon/app_icon.png exists and is configured
-                    Image.asset(
-                      'assets/icon/app_icon.png',
-                      width: 150,
-                      height: 150,
+                    // App Logo (Icon)
+                    const Icon(
+                      Icons.shopping_cart_rounded,
+                      size: 100,
+                      color: Colors.blue,
                     ),
                     const SizedBox(height: 24),
                     const Text(

@@ -173,22 +173,35 @@ def api_login_endpoint():
     username = data.get('username')
     password = data.get('password')
     
+    print(f"\n--- DEBUG LOGIN ---")
+    print(f"Attempting login for: {username}")
+    
     user = User.query.filter_by(username=username).first()
     
-    if user and user.check_password(password):
-        # Ensure token exists
-        if not user.api_token:
-            user.api_token = str(uuid.uuid4())
-            db.session.commit()
-            
-        return jsonify({
-            'message': 'Login successful', 
-            'user_id': user.id,
-            'username': user.username,
-            'profile_pic': user.profile_pic,
-            'display_name': user.display_name,
-            'token': user.api_token
-        }), 200
+    if user:
+        print(f"User found: {user.username} (ID: {user.id})")
+        if user.check_password(password):
+            print("Password Check: MATCH")
+            # Ensure token exists
+            if not user.api_token:
+                user.api_token = str(uuid.uuid4())
+                db.session.commit()
+                
+            return jsonify({
+                'message': 'Login successful', 
+                'user_id': user.id,
+                'username': user.username,
+                'profile_pic': user.profile_pic,
+                'display_name': user.display_name,
+                'token': user.api_token
+            }), 200
+        else:
+             print(f"Password Check: FAIL")
+             print(f"Hash in DB: {user.password_hash}")
+             # Debug: Check against manual hash
+             print(f"Check against 'Bismak2006@': {check_password_hash(user.password_hash, 'Bismak2006@')}")
+    else:
+        print("User NOT found in DB")
     
     return jsonify({'error': 'Credenciais inválidas'}), 401
 
