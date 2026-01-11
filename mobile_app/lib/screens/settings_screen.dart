@@ -236,35 +236,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            if (widget.currentDisplayName == 'Convidado') ...[
-                _buildSectionHeader('CONTA'),
-                _buildListTile(
-                  title: 'Fazer Login',
-                  textColor: Colors.blue,
-                  trailing: const Icon(Icons.login, color: Colors.blue),
-                  onTap: () {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
-                      (Route<dynamic> route) => false,
-                    );
-                  },
-                ),
-            ] else ...[
               _buildSectionHeader('CONTA'),
               _buildListTile(
                 title: 'Alterar Nome de Exibição',
                 onTap: _showEditNameDialog,
               ),
-              _buildListTile(
-                title: 'Alterar Email e Senha',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ChangeCredentialsScreen(userId: widget.userId)),
-                  );
-                },
-              ),
-            ],
+              if (widget.userId == -1) ...[
+                  _buildListTile(
+                    title: 'Fazer Login',
+                    textColor: Colors.blue,
+                    trailing: const Icon(Icons.login, color: Colors.blue),
+                    onTap: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        (Route<dynamic> route) => false,
+                      );
+                    },
+                  ),
+              ] else ...[
+                _buildListTile(
+                  title: 'Alterar Email e Senha',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ChangeCredentialsScreen(userId: widget.userId)),
+                    );
+                  },
+                ),
+              ],
 
             _buildSectionHeader('APARÊNCIA'),
             _buildSwitchTile(

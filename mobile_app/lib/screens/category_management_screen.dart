@@ -102,6 +102,14 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
     }
   }
 
+  Color _parseColor(String colorString) {
+    try {
+      return Color(int.parse(colorString.replaceFirst('#', '0xFF')));
+    } catch (e) {
+      return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -122,12 +130,12 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
               itemCount: _categories.length,
               itemBuilder: (context, index) {
                 final category = _categories[index];
-                return Card(
+                  return Card(
                   color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Colors.blue.withOpacity(0.2),
-                      child: Text(category['name'][0].toUpperCase(), style: const TextStyle(color: Colors.blue)),
+                      backgroundColor: _parseColor(category['color'] ?? '#9E9E9E'),
+                      child: Text(category['name'][0].toUpperCase(), style: const TextStyle(color: Colors.white)),
                     ),
                     title: Text(
                       category['name'],

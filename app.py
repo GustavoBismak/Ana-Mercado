@@ -345,9 +345,8 @@ def api_dashboard(current_api_user):
     # Format category data
     cat_data = []
     for cat, total in category_spend.items():
-        # Prioritize default vibrant colors for system categories
-        # Fallback to DB color (custom categories) or generic gray
-        color = default_colors.get(cat, category_colors.get(cat, '#9E9E9E'))
+        # Use color from DB (system or custom), fallback to gray
+        color = category_colors.get(cat, '#9E9E9E')
         cat_data.append({
             'category': cat,
             'total': total,
@@ -595,6 +594,24 @@ def init_db():
             # Ensure existing user has token
             if not specific_user.api_token:
                 specific_user.api_token = str(uuid.uuid4())
+        
+        # Initialize Default Categories
+        default_categories = [
+            {'name': 'Alimentos', 'color': '#FF9800'}, # Orange
+            {'name': 'Limpeza', 'color': '#009688'},   # Teal
+            {'name': 'Higiene', 'color': '#9C27B0'},   # Purple
+            {'name': 'Feira Básica', 'color': '#795548'}, # Brown
+            {'name': 'Lanche/Petisco', 'color': '#E91E63'}, # Pink
+            {'name': 'Frutas', 'color': '#4CAF50'},    # Green
+            {'name': 'Carne', 'color': '#F44336'},     # Red
+            {'name': 'Bebida', 'color': '#2196F3'},    # Blue
+            {'name': 'Outros', 'color': '#9E9E9E'}     # Gray
+        ]
+        
+        for cat_data in default_categories:
+            if not Category.query.filter_by(name=cat_data['name'], user_id=None).first():
+                cat = Category(name=cat_data['name'], color=cat_data['color'], user_id=None)
+                db.session.add(cat)
             
         db.session.commit()
 
