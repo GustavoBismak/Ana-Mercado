@@ -236,7 +236,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            if (widget.userId == -1) ...[
+            if (widget.currentDisplayName == 'Convidado') ...[
                 _buildSectionHeader('CONTA'),
                 _buildListTile(
                   title: 'Fazer Login',

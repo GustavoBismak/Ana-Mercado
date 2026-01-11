@@ -154,6 +154,31 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>?> createGuestUser() async {
+    try {
+      final String guestName = 'guest_${DateTime.now().millisecondsSinceEpoch}';
+      final String guestPass = 'guest_secret';
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': guestName, 'password': guestPass}),
+      );
+
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return {
+          'user_id': data['user_id'],
+          'username': guestName, 
+          'token': data['token']
+        };
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<List<ShoppingList>> getLists(int userId, {bool completed = false}) async {
     if (userId == -1) return []; // Guest Mode
 

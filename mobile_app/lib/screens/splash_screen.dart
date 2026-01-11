@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 
@@ -42,28 +43,58 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     
     // Check Shared Preferences
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('userId');
-    final username = prefs.getString('username');
+    int? userId = prefs.getInt('userId');
+    String? username = prefs.getString('username');
+    final bool isGuest = prefs.getBool('isGuest') ?? false;
 
     if (!mounted) return;
 
     if (userId != null && username != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen(username: username, userId: userId)),
+        MaterialPageRoute(builder: (context) => HomeScreen(
+          username: username!, 
+          userId: userId!,
+        )),
       );
     } else {
-      // Guest Mode (Modified to skip LoginScreen)
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(
-            username: 'Convidado',
-            userId: -1,
-            initialDisplayName: 'Convidado',
+      // No user found, create a silent Guest account on backend
+      final guestData = await ApiService().createGuestUser();
+      
+      if (guestData != null) {
+        // Save guest session so they stay logged in as guest
+        await prefs.setInt('userId', guestData['user_id']);
+        await prefs.setString('username', guestData['username']);
+        await prefs.setString('api_token', guestData['token']);
+        await prefs.setBool('isGuest', true);
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(
+              username: 'Convidado',
+              userId: guestData['user_id'], // Real ID from backend
+              initialDisplayName: 'Convidado',
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+         // Fallback if backend offline: still try to show Guest UI (will error on actions)
+         // or force Login screen? Let's force Home with -1 but show error snackbar there?
+         // Better to just show Home with -1 and let them retry or understand its offline.
+         Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomeScreen(
+                username: 'Convidado',
+                userId: -1,
+                initialDisplayName: 'Convidado (Offline)',
+              ),
+            ),
+          );
+      }
     }
   }
 
