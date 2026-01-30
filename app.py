@@ -117,7 +117,8 @@ class ShoppingList(db.Model):
     
     @property
     def total_value(self):
-        return sum(item.total for item in self.items)
+        # Only sum items that are marked as bought (checked)
+        return sum(item.total for item in self.items if item.is_checked)
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -302,8 +303,9 @@ def api_dashboard(current_api_user):
     month = request.args.get('month') # Optional: YYYY-MM
     
     # Base query for all items (for history) owned by user
+    # FILTER: Only show bought items in dashboard
     query = db.session.query(Item).join(ShoppingList).filter(
-        (ShoppingList.user_id == current_api_user.id)
+        (ShoppingList.user_id == current_api_user.id) & (Item.is_checked == True)
     )
     all_items = query.all()
 

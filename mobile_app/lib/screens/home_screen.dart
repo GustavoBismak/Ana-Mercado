@@ -79,12 +79,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
   
-  void _updateProfilePic(String newPath) {
+  Future<void> _updateProfilePic(String newPath) async {
     setState(() => _profilePic = newPath);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profile_pic', newPath);
   }
 
-  void _updateDisplayName(String newName) {
+  Future<void> _updateDisplayName(String newName) async {
     setState(() => _displayName = newName);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('display_name', newName);
   }
 
   // ... (Dialog Code omitted, assumed same) ...
