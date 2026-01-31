@@ -39,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   Future<void> _checkAuth() async {
     // Wait for animation
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 1));
     
     // Check Shared Preferences
     final prefs = await SharedPreferences.getInstance();

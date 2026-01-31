@@ -137,6 +137,112 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
     );
   }
 
+  void _showEditItemDialog(Item item) async {
+    final nameController = TextEditingController(text: item.name);
+    final quantityController = TextEditingController(text: item.quantity.toString());
+    final priceController = TextEditingController(text: item.price.toStringAsFixed(2));
+    String selectedCategory = item.category;
+    
+    // Fetch categories dynamically
+    List<String> categories = ['Outros'];
+    try {
+      final fetched = await apiService.getCategories(widget.userId);
+      categories = fetched.map((c) => c['name'] as String).toList();
+      if (!categories.contains('Outros')) categories.add('Outros');
+    } catch (e) {
+      // Fallback
+    }
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Editar Item'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Nome do item'),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: quantityController,
+                          decoration: const InputDecoration(labelText: 'Qtd'),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: priceController,
+                          decoration: const InputDecoration(labelText: 'Preço (R\$)'),
+                          keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: categories.contains(selectedCategory) ? selectedCategory : 'Outros',
+                    decoration: const InputDecoration(labelText: 'Categoria'),
+                    items: categories.map((String category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedCategory = newValue;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (nameController.text.isNotEmpty && priceController.text.isNotEmpty) {
+                      try {
+                        await apiService.updateItem(
+                          item.id,
+                          nameController.text,
+                          int.parse(quantityController.text),
+                          double.parse(priceController.text.replaceAll(',', '.')),
+                          selectedCategory,
+                        );
+                        Navigator.pop(context);
+                        _loadList();
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Erro ao atualizar item')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Salvar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   double _calculateCheckedTotal(ShoppingList list) {
     return list.items
         .where((item) => item.isChecked)
@@ -201,40 +307,30 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                   itemCount: list.items.length,
                   itemBuilder: (context, index) {
                     final item = list.items[index];
-                    return CheckboxListTile(
-                      activeColor: isDark ? Colors.lightBlueAccent : Colors.blue,
-                      checkColor: isDark ? Colors.black : Colors.white,
-                      secondary: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.grey),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Excluir Item?'),
-                              content: Text('Deseja remover "${item.name}" da lista?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('Cancelar'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () async {
-                                    try {
-                                      await apiService.deleteItem(item.id);
-                                      Navigator.pop(context);
-                                      _loadList();
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Erro ao excluir item')),
-                                      );
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-                                  child: const Text('Excluir'),
-                                ),
-                              ],
-                            ),
-                          );
+                    return ListTile(
+                      leading: Checkbox(
+                        activeColor: isDark ? Colors.lightBlueAccent : Colors.blue,
+                        checkColor: isDark ? Colors.black : Colors.white,
+                        value: item.isChecked,
+                        onChanged: (bool? value) async {
+                          if (value == null) return;
+                          
+                          // Optimistic Update
+                          setState(() {
+                             item.isChecked = value;
+                          });
+                          
+                          try {
+                            await apiService.toggleItem(item.id);
+                          } catch (e) {
+                             // Revert on error
+                             setState(() {
+                               item.isChecked = !value;
+                             });
+                             ScaffoldMessenger.of(context).showSnackBar(
+                               const SnackBar(content: Text('Erro ao atualizar item')),
+                             );
+                          }
                         },
                       ),
                       title: Text(
@@ -248,27 +344,48 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                         '${item.quantity}x R\$ ${item.price.toStringAsFixed(2)} = R\$ ${item.total.toStringAsFixed(2)}\n${item.category}',
                         style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade700),
                       ),
-                      value: item.isChecked,
-                      onChanged: (bool? value) async {
-                        if (value == null) return;
-                        
-                        // Optimistic Update
-                        setState(() {
-                           item.isChecked = value;
-                        });
-                        
-                        try {
-                          await apiService.toggleItem(item.id);
-                        } catch (e) {
-                           // Revert on error
-                           setState(() {
-                             item.isChecked = !value;
-                           });
-                           ScaffoldMessenger.of(context).showSnackBar(
-                             const SnackBar(content: Text('Erro ao atualizar item')),
-                           );
-                        }
-                      },
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () => _showEditItemDialog(item),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.grey),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Excluir Item?'),
+                                  content: Text('Deseja remover "${item.name}" da lista?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancelar'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        try {
+                                          await apiService.deleteItem(item.id);
+                                          Navigator.pop(context);
+                                          _loadList();
+                                        } catch (e) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Erro ao excluir item')),
+                                          );
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                                      child: const Text('Excluir'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -276,9 +393,10 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
             ],
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-          floatingActionButton: FloatingActionButton(
+          floatingActionButton: FloatingActionButton.extended(
             onPressed: _showAddItemDialog,
-            child: const Icon(Icons.add_shopping_cart),
+            icon: const Icon(Icons.add_shopping_cart),
+            label: const Text('Adicionar Item'),
           ),
         );
       },

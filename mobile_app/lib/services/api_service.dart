@@ -281,6 +281,23 @@ class ApiService {
     }
   }
 
+  Future<void> updateItem(int itemId, String name, int quantity, double price, String category) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/items/$itemId'),
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        'name': name,
+        'quantity': quantity,
+        'price': price,
+        'category': category,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update item');
+    }
+  }
+
   Future<void> completeList(int listId) async {
     final response = await http.post(
       Uri.parse('$baseUrl/lists/$listId/complete'),

@@ -21,15 +21,18 @@ def serve_flutter_app():
 
 @app.route('/<path:path>')
 def catch_all(path):
+    print(f"DEBUG: Requesting path -> {path}")
     if path.startswith('api'):
         return jsonify({'error': 'Not found'}), 404
     
     # Check if file exists in static folder (build/web)
     full_path = os.path.join(app.static_folder, path)
     if os.path.exists(full_path) and os.path.isfile(full_path):
+        print(f"DEBUG: Serving file -> {full_path}")
         return send_from_directory(app.static_folder, path)
 
     # Otherwise return index.html for Flutter routing
+    print(f"DEBUG: Serving index.html for -> {path}")
     return send_from_directory(app.static_folder, 'index.html')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ana_mercado_v6.db'
@@ -383,6 +386,28 @@ def api_toggle_item(current_api_user, item_id):
          return jsonify({'error': 'Acesso negado'}), 403
 
     item.is_checked = not item.is_checked
+    db.session.commit()
+    return jsonify(item.to_dict())
+
+@app.route('/api/items/<int:item_id>', methods=['PUT'])
+@token_required
+def api_update_item(current_api_user, item_id):
+    item = Item.query.get_or_404(item_id)
+    
+    # Security check
+    if item.shopping_list.user_id != current_api_user.id:
+        return jsonify({'error': 'Acesso negado'}), 403
+        
+    data = request.get_json()
+    
+    if 'name' in data: item.name = data['name'].strip()
+    if 'quantity' in data: item.quantity = int(data['quantity'])
+    if 'price' in data: item.price = float(data['price'])
+    if 'category' in data: item.category = data['category']
+    
+    # Recalculate total
+    item.total = item.quantity * item.price
+    
     db.session.commit()
     return jsonify(item.to_dict())
 
