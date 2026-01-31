@@ -11,7 +11,7 @@ import os
 import random
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__, static_folder='mobile_app/build/web', template_folder='mobile_app/build/web')
+app = Flask(__name__, static_folder='mobile_app/build/web', template_folder='templates')
 # Enable CORS for all routes (allows Flutter Web to talk to Python)
 CORS(app)
 
@@ -50,7 +50,7 @@ def serve_uploads(filename):
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+login_manager.login_view = 'admin_login'
 login_manager.login_message = "Por favor, faça login para acessar esta página."
 login_manager.login_message_category = "warning"
 
@@ -429,7 +429,46 @@ def api_complete_list(current_api_user, list_id):
 def api_get_notifications(current_api_user):
     # Optional: Filter notifications by user if needed
     notifications = Notification.query.order_by(Notification.created_at.desc()).all()
+    notifications = Notification.query.order_by(Notification.created_at.desc()).all()
     return jsonify([n.to_dict() for n in notifications])
+
+@app.route('/admin/notifications')
+@login_required
+def admin_notifications_page():
+    # Security: Only allow specific admins
+    allowed_users = ['admin', 'bismakgustavo3@gmail.com']
+    
+    if current_user.username not in allowed_users:
+        return "Acesso Negado: Você não tem permissão para acessar esta página.", 403
+        
+    if current_user.username not in allowed_users:
+        return "Acesso Negado: Você não tem permissão para acessar esta página.", 403
+        
+    return render_template('admin_notifications.html')
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if current_user.is_authenticated:
+        return redirect(url_for('admin_notifications_page'))
+        
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            # Security check for admin page access (optional but good UI)
+            allowed_users = ['admin', 'bismakgustavo3@gmail.com']
+            if user.username in allowed_users:
+                 return redirect(url_for('admin_notifications_page'))
+            else:
+                 flash("Login realizado, mas você não é admin.", "warning")
+        else:
+            flash("Credenciais inválidas. Tente novamente.", "danger")
+            
+    return render_template('admin_login.html')
 
 @app.route('/api/notifications', methods=['POST'])
 def api_create_notification(): # Keep public or add Admin Check later
@@ -606,6 +645,7 @@ def init_db():
         # Initialize Admin User (keep for legacy)
         if not User.query.filter_by(username='admin').first():
             admin = User(username='admin')
+            admin.set_password('admin')
             admin.set_password('admin')
             admin.api_token = str(uuid.uuid4())
             db.session.add(admin)
