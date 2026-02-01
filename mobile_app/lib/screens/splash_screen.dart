@@ -38,62 +38,87 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _checkAuth() async {
-    // Wait for animation
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Check Shared Preferences
-    final prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt('userId');
-    String? username = prefs.getString('username');
-    final bool isGuest = prefs.getBool('isGuest') ?? false;
-
-    if (!mounted) return;
-
-    if (userId != null && username != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen(
-          username: username!, 
-          userId: userId!,
-        )),
-      );
-    } else {
-      // No user found, create a silent Guest account on backend
-      final guestData = await ApiService().createGuestUser();
+    try {
+      // Wait for animation
+      await Future.delayed(const Duration(seconds: 1));
       
-      if (guestData != null) {
-        // Save guest session so they stay logged in as guest
-        await prefs.setInt('userId', guestData['user_id']);
-        await prefs.setString('username', guestData['username']);
-        await prefs.setString('api_token', guestData['token']);
-        await prefs.setBool('isGuest', true);
+      // Check Shared Preferences
+      final prefs = await SharedPreferences.getInstance();
+      
+      int? userId;
+      String? username;
+      
+      try {
+        userId = prefs.getInt('userId');
+        username = prefs.getString('username');
+      } catch (e) {
+        // Error reading prefs (e.g. type mismatch), clear them
+        await prefs.clear();
+        userId = null;
+        username = null;
+      }
 
-        if (!mounted) return;
+      if (!mounted) return;
 
+      if (userId != null && username != null) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(
-              username: 'Convidado',
-              userId: guestData['user_id'], // Real ID from backend
-              initialDisplayName: 'Convidado',
-            ),
-          ),
+          MaterialPageRoute(builder: (context) => HomeScreen(
+            username: username!, 
+            userId: userId!,
+          )),
         );
       } else {
-         // Fallback if backend offline: still try to show Guest UI (will error on actions)
-         // or force Login screen? Let's force Home with -1 but show error snackbar there?
-         // Better to just show Home with -1 and let them retry or understand its offline.
-         Navigator.pushReplacement(
+        // No user found, create a silent Guest account on backend
+        final guestData = await ApiService().createGuestUser();
+        
+        if (guestData != null) {
+          // Save guest session so they stay logged in as guest
+          await prefs.setInt('userId', guestData['user_id']);
+          await prefs.setString('username', guestData['username']);
+          await prefs.setString('api_token', guestData['token']);
+          await prefs.setBool('isGuest', true);
+
+          if (!mounted) return;
+
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const HomeScreen(
+              builder: (context) => HomeScreen(
                 username: 'Convidado',
-                userId: -1,
-                initialDisplayName: 'Convidado (Offline)',
+                userId: guestData['user_id'], // Real ID from backend
+                initialDisplayName: 'Convidado',
               ),
             ),
           );
+        } else {
+           if (!mounted) return;
+           // Fallback if backend offline: force Guest UI
+           Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const HomeScreen(
+                  username: 'Convidado',
+                  userId: -1,
+                  initialDisplayName: 'Convidado (Offline)',
+                ),
+              ),
+            );
+        }
+      }
+    } catch (e) {
+      // Global error handler for startup -> Force offline home
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(
+              username: 'Convidado',
+              userId: -1,
+              initialDisplayName: 'Convidado (Recuperado)',
+            ),
+          ),
+        );
       }
     }
   }

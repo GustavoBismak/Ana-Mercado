@@ -395,4 +395,16 @@ class ApiService {
       return false;
     }
   }
+  Future<bool> sendSuggestion(String content) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/suggestions'),
+        headers: await _getHeaders(),
+        body: jsonEncode({'content': content}),
+      );
+      return response.statusCode == 201;
+    } catch (e) {
+      return false;
+    }
+  }
 }

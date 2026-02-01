@@ -166,6 +166,22 @@ class Notification(db.Model):
             'created_at': self.created_at.isoformat()
         }
 
+class Suggestion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    
+    user = db.relationship('User', backref=db.backref('suggestions', lazy=True))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'content': self.content,
+            'created_at': self.created_at.isoformat(),
+            'username': self.user.username if self.user else 'Anônimo'
+        }
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -483,6 +499,33 @@ def api_create_notification(): # Keep public or add Admin Check later
     db.session.add(notification)
     db.session.commit()
     return jsonify(notification.to_dict()), 201
+
+@app.route('/api/suggestions', methods=['POST'])
+@token_required
+def api_create_suggestion(current_api_user):
+    data = request.get_json()
+    content = data.get('content')
+    
+    if not content:
+        return jsonify({'error': 'Conteúdo da sugestão é obrigatório'}), 400
+        
+    suggestion = Suggestion(content=content, user_id=current_api_user.id)
+    db.session.add(suggestion)
+    db.session.commit()
+    
+    return jsonify({'message': 'Sugestão enviada com sucesso!'}), 201
+
+@app.route('/admin/suggestions')
+@login_required
+def admin_suggestions_page():
+    # Security: Only allow specific admins
+    allowed_users = ['admin', 'bismakgustavo3@gmail.com']
+    
+    if current_user.username not in allowed_users:
+        return "Acesso Negado: Você não tem permissão para acessar esta página.", 403
+        
+    suggestions = Suggestion.query.order_by(Suggestion.created_at.desc()).all()
+    return render_template('admin_suggestions.html', suggestions=suggestions)
 
 # Category Routes
 @app.route('/api/categories', methods=['GET'])

@@ -9,6 +9,7 @@ import 'dashboard_screen.dart';
 import 'history_screen.dart';
 
 import 'notifications_screen.dart';
+import 'suggestion_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String username;
@@ -337,6 +338,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       onDisplayNameUpdated: _updateDisplayName,
                     ),
                   ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.lightbulb_outline),
+              title: const Text('Sugerir Melhorias'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SuggestionScreen()),
                 );
               },
             ),
