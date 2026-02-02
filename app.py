@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 import calendar
 import locale
@@ -11,9 +11,15 @@ import os
 import random
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__, static_folder='mobile_app/build/web', template_folder='templates')
+basedir = os.path.abspath(os.path.dirname(__file__))
+app = Flask(__name__, 
+            static_folder=os.path.join(basedir, 'mobile_app', 'build', 'web'), 
+            template_folder=os.path.join(basedir, 'templates'))
 # Enable CORS for all routes (allows Flutter Web to talk to Python)
 CORS(app)
+
+def get_brasilia_time():
+    return datetime.now(timezone(timedelta(hours=-3)))
 
 @app.route('/')
 def serve_flutter_app():
@@ -113,7 +119,7 @@ class UserSettings(db.Model):
 class ShoppingList(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_brasilia_time)
     is_completed = db.Column(db.Boolean, default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True) # Nullable for backward compatibility/admin
     items = db.relationship('Item', backref='shopping_list', lazy=True, cascade="all, delete-orphan")
@@ -131,7 +137,7 @@ class Item(db.Model):
     total = db.Column(db.Float, default=0.0)
     is_checked = db.Column(db.Boolean, default=False)
     category = db.Column(db.String(50), default='Outros')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_brasilia_time)
     list_id = db.Column(db.Integer, db.ForeignKey('shopping_list.id'), nullable=False)
 
     def to_dict(self):
@@ -155,7 +161,7 @@ class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_brasilia_time)
     is_read = db.Column(db.Boolean, default=False) # For future use per user
     
     def to_dict(self):
@@ -169,7 +175,7 @@ class Notification(db.Model):
 class Suggestion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_brasilia_time)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     
     user = db.relationship('User', backref=db.backref('suggestions', lazy=True))
@@ -199,10 +205,7 @@ def api_login_endpoint():
     user = User.query.filter_by(username=username).first()
     
     if user:
-        print(f"User found: {user.username} (ID: {user.id})")
         if user.check_password(password):
-            print("Password Check: MATCH")
-            # Ensure token exists
             if not user.api_token:
                 user.api_token = str(uuid.uuid4())
                 db.session.commit()
@@ -216,14 +219,9 @@ def api_login_endpoint():
                 'token': user.api_token
             }), 200
         else:
-             print(f"Password Check: FAIL")
-             print(f"Hash in DB: {user.password_hash}")
-             # Debug: Check against manual hash
-             print(f"Check against 'Bismak2006@': {check_password_hash(user.password_hash, 'Bismak2006@')}")
+            return jsonify({'error': 'Senha incorreta'}), 401
     else:
-        print("User NOT found in DB")
-    
-    return jsonify({'error': 'Credenciais inválidas'}), 401
+        return jsonify({'error': 'Usuário não encontrado'}), 401
 
 @app.route('/api/register', methods=['POST'])
 def api_register():

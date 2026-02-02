@@ -124,7 +124,7 @@ class ApiService {
   }
 
 
-  Future<Map<String, dynamic>?> login(String username, String password) async {
+  Future<Map<String, dynamic>> login(String username, String password) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
@@ -132,12 +132,13 @@ class ApiService {
         body: jsonEncode({'username': username, 'password': password}),
       );
       
+      final data = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        return {'success': true, 'data': data};
       }
-      return null;
+      return {'success': false, 'message': data['error'] ?? 'Credenciais inválidas'};
     } catch (e) {
-      return null;
+      return {'success': false, 'message': 'Erro de conexão: $e'};
     }
   }
 

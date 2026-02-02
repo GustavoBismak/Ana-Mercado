@@ -22,14 +22,15 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     setState(() => _isLoading = true);
     
-    final userData = await _apiService.login(
+    final response = await _apiService.login(
       _usernameController.text,
       _passwordController.text,
     );
-
+ 
     setState(() => _isLoading = false);
-
-    if (userData != null && mounted) {
+ 
+    if (response['success'] == true && mounted) {
+      final userData = response['data'];
       // Save to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('userId', userData['user_id']);
@@ -43,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (userData['token'] != null) {
         await prefs.setString('api_token', userData['token']);
       }
-
+ 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -58,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Login falhou. Verifique suas credenciais.'),
+          content: Text(response['message'] ?? 'Login falhou.'),
           backgroundColor: Colors.red.shade400,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'screens/splash_screen.dart';
 import 'providers/theme_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await initializeDateFormatting('pt_BR', null);
+  } catch (e) {
+    debugPrint("Error initializing date formatting: $e");
+  }
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),

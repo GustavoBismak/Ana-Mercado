@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
+import 'dart:async';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,34 +14,60 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _animation;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _cartSlideAnimation;
+  late Animation<double> _lineWidthAnimation;
 
   @override
   void initState() {
     super.initState();
+    
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3), // Duration of the loading
+      duration: const Duration(milliseconds: 2000),
     );
 
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.5, curve: Curves.easeIn)),
     );
 
-    // Start animation
+    // Initial slide from left
+    _cartSlideAnimation = Tween<Offset>(
+      begin: const Offset(-2.0, 0.0),
+      end: const Offset(0.0, 0.0),
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+    ));
+
+    // Width of the line being "pulled"
+    _lineWidthAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+      ),
+    );
+
     _controller.forward();
+    _startApp();
+  }
 
-    // Listen for completion
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _checkAuth();
-      }
-    });
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _startApp() async {
+    // Wait for animation and minimal splash time
+    await Future.delayed(const Duration(seconds: 3));
+    
+    if (!mounted) return;
+    _checkAuth();
   }
 
   Future<void> _checkAuth() async {
     try {
-      // Check Shared Preferences
       final prefs = await SharedPreferences.getInstance();
       
       int? userId;
@@ -62,37 +89,34 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       if (!mounted) return;
 
       if (userId != null && username != null) {
-        // User is logged in -> Go to Home
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen(
-            username: username!, 
-            userId: userId!,
-            initialDisplayName: displayName,
-            initialProfilePic: profilePic,
-          )),
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(
+              username: username!, 
+              userId: userId!,
+              initialDisplayName: displayName,
+              initialProfilePic: profilePic,
+            ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 800),
+          ),
         );
       } else {
-        // Not logged in -> Go to Login (User asked to arrive logged in, implying if they WERE, they stay. If not, they need to login.
-        // OR, user implies Guest access should be default? "quando abrir já está logado com a conta"
-        // If they mean "Remember Me", the above logic handles it.
-        // If they mean "Guest Mode auto-login", I will re-implement the generic guest login fallback just in case.
-        
-        // Actually, the request "when customer login... next time app start... name Ana Mercado... and already logged in"
-        // This confirms standard persistent login.
-        
-        // I will direct to Login Screen if no session found, as that's standard.
-        // But referencing the previous code, there was a Guest auto-creation. I'll keep it for robustness if that was the intent,
-        // but typically "Login" means the user's actual account. 
-        // I'll stick to: If no token, go to LoginScreen. 
-        
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 800),
+          ),
         );
       }
     } catch (e) {
-      // Fallback
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -103,80 +127,104 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    // Screen width for the progress bar calculation
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final double barWidth = screenWidth * 0.7; // 70% of screen width
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Title
-            const Text(
-              'Ana Mercado',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-                letterSpacing: 1.5,
+            // The Cart pulling the line animation
+            SizedBox(
+              height: 120,
+              width: 300,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // The Line (Horizontal)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 20,
+                    child: AnimatedBuilder(
+                      animation: _lineWidthAnimation,
+                      builder: (context, child) {
+                        return FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: _lineWidthAnimation.value,
+                          child: Container(
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  // The Cart sliding
+                  SlideTransition(
+                    position: _cartSlideAnimation,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.1),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          )
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.shopping_cart_rounded,
+                        size: 60,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 50),
-            
-            // Animated Progress Bar with Cart
-            SizedBox(
-              width: barWidth + 40, // Extra space for icon overflowing
-              height: 60,
-              child: AnimatedBuilder(
-                animation: _animation,
-                builder: (context, child) {
-                  return Stack(
-                    alignment: Alignment.centerLeft,
-                    children: [
-                      // Background Line
-                      Positioned(
-                        left: 0,
-                        top: 29, // vertically centered
-                        child: Container(
-                          width: barWidth,
-                          height: 2,
-                          color: Colors.grey.shade300,
-                        ),
-                      ),
-                      
-                      // Progress Line
-                      Positioned(
-                        left: 0,
-                        top: 29,
-                        child: Container(
-                          width: barWidth * _animation.value,
-                          height: 2,
-                          color: Colors.blue,
-                        ),
-                      ),
-                      
-                      // Cart Icon (The "Pulling" effect)
-                      Positioned(
-                        left: (barWidth * _animation.value) - 15, // centered on tip
-                        top: 10,
-                        child: const Icon(
-                          Icons.shopping_cart,
-                          color: Colors.blue,
-                          size: 30,
-                        ),
-                      ),
-                    ],
-                  );
-                },
+            const SizedBox(height: 24),
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  const Text(
+                    'Ana Mercado',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sempre com você!',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.blue.shade300,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 60),
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: const SizedBox(
+                width: 30,
+                height: 30,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                ),
               ),
             ),
           ],

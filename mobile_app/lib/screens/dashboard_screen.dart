@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -53,10 +54,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
           
           // Helper to get available months from history for the dropdown
           // We can assume monthlyData contains all history
-          final List<String> availableMonths = monthlyData
+          // Generate last 12 months for the dropdown
+          final List<String> dropdownMonths = [];
+          DateTime now = DateTime.now();
+          for (int i = 0; i < 12; i++) {
+            DateTime date = DateTime(now.year, now.month - i, 1);
+            dropdownMonths.add(DateFormat('yyyy-MM').format(date));
+          }
+          
+          // Also include any months that have data but are older than 12 months
+          final List<String> dataMonths = monthlyData
               .map((e) => e['month'] as String)
-              .toSet() // dedupe
-              .toList()
+              .toList();
+          
+          final Set<String> allVisibleMonths = {...dropdownMonths, ...dataMonths};
+          final List<String> sortedMonths = allVisibleMonths.toList()
             ..sort((a, b) => b.compareTo(a)); // desc sort
 
           return SingleChildScrollView(
@@ -65,37 +77,86 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Month Filter
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String?>(
-                      value: _selectedMonth,
-                      isExpanded: true,
-                      hint: const Text("Filtrar por Período"),
-                      items: [
-                        const DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text("Geral (Até Agora)", style: TextStyle(fontWeight: FontWeight.bold)),
+                GestureDetector(
+                  onTap: () async {
+                    final List<String> availableMonths = [];
+                    DateTime now = DateTime.now();
+                    // Show last 24 months for exhaustive list
+                    for (int i = 0; i < 24; i++) {
+                      DateTime date = DateTime(now.year, now.month - i, 1);
+                      availableMonths.add(DateFormat('yyyy-MM').format(date));
+                    }
+                    
+                    final result = await showDialog<String?>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Selecionar Mês"),
+                        content: SizedBox(
+                          width: double.maxFinite,
+                          child: ListView(
+                            shrinkWrap: true,
+                            children: [
+                              ListTile(
+                                title: const Text("Geral (Até Agora)", style: TextStyle(fontWeight: FontWeight.bold)),
+                                selected: _selectedMonth == null,
+                                onTap: () => Navigator.pop(context, "GERAL"),
+                              ),
+                              const Divider(),
+                              ...availableMonths.map((m) {
+                                DateTime date = DateTime.parse('$m-01');
+                                String label = DateFormat('MMMM yyyy', 'pt_BR').format(date);
+                                label = label[0].toUpperCase() + label.substring(1);
+                                return ListTile(
+                                  title: Text(label),
+                                  selected: _selectedMonth == m,
+                                  onTap: () => Navigator.pop(context, m),
+                                );
+                              }),
+                            ],
+                          ),
                         ),
-                        ...availableMonths.map((month) {
-                          // Format YYYY-MM to readable? leaving as is for now or simple format
-                          return DropdownMenuItem<String?>(
-                            value: month,
-                            child: Text(month),
-                          );
-                        }),
+                      ),
+                    );
+                    
+                    if (result != null) {
+                       final selectedVal = result == "GERAL" ? null : result;
+                       setState(() {
+                         _selectedMonth = selectedVal;
+                       });
+                       _loadStats(month: selectedVal);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.blue.shade200),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
                       ],
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedMonth = val;
-                        });
-                        _loadStats(month: val);
-                      },
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_month, color: Colors.blue),
+                            const SizedBox(width: 12),
+                            Text(
+                              _selectedMonth == null 
+                                ? "Geral (Até Agora)" 
+                                : (() {
+                                    DateTime date = DateTime.parse('$_selectedMonth-01');
+                                    String label = DateFormat('MMMM yyyy', 'pt_BR').format(date);
+                                    return label[0].toUpperCase() + label.substring(1);
+                                  })(),
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                      ],
                     ),
                   ),
                 ),
@@ -282,7 +343,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return PieChartSectionData(
         color: color,
         value: value,
-        title: '${category}\nR\$${value.toStringAsFixed(0)}',
+        title: isTouched ? '${category}\nR\$${value.toStringAsFixed(0)}' : 'R\$${value.toStringAsFixed(0)}',
         radius: radius,
         titleStyle: TextStyle(
           fontSize: fontSize,
