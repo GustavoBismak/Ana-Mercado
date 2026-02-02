@@ -37,7 +37,7 @@ def catch_all(path):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ana_mercado_v6.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24).hex())
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
@@ -745,4 +745,4 @@ if __name__ == '__main__':
         print("Running in HTTPS mode!")
     
     port = int(os.environ.get('PORT', default_port))
-    app.run(debug=True, host='0.0.0.0', port=port, ssl_context=context)
+    app.run(debug=False, host='0.0.0.0', port=port, ssl_context=context)

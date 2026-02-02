@@ -307,84 +307,124 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                   itemCount: list.items.length,
                   itemBuilder: (context, index) {
                     final item = list.items[index];
-                    return ListTile(
-                      leading: Checkbox(
-                        activeColor: isDark ? Colors.lightBlueAccent : Colors.blue,
-                        checkColor: isDark ? Colors.black : Colors.white,
-                        value: item.isChecked,
-                        onChanged: (bool? value) async {
-                          if (value == null) return;
-                          
-                          // Optimistic Update
-                          setState(() {
-                             item.isChecked = value;
-                          });
-                          
-                          try {
-                            await apiService.toggleItem(item.id);
-                          } catch (e) {
-                             // Revert on error
-                             setState(() {
-                               item.isChecked = !value;
-                             });
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               const SnackBar(content: Text('Erro ao atualizar item')),
-                             );
-                          }
-                        },
+                    return Dismissible(
+                      key: Key('item_${item.id}'),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        child: const Icon(Icons.delete, color: Colors.white),
                       ),
-                      title: Text(
-                        item.name,
-                        style: TextStyle(
-                          decoration: item.isChecked ? TextDecoration.lineThrough : null,
-                          color: item.isChecked ? Colors.grey : (isDark ? Colors.white : Colors.black),
+                      confirmDismiss: (direction) async {
+                        return await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Excluir Item?'),
+                            content: Text('Deseja remover "${item.name}" da lista?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                                child: const Text('Excluir'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      onDismissed: (direction) async {
+                        try {
+                          await apiService.deleteItem(item.id);
+                          _loadList();
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Erro ao excluir item')),
+                          );
+                        }
+                      },
+                      child: ListTile(
+                        leading: Checkbox(
+                          activeColor: isDark ? Colors.lightBlueAccent : Colors.blue,
+                          checkColor: isDark ? Colors.black : Colors.white,
+                          value: item.isChecked,
+                          onChanged: (bool? value) async {
+                            if (value == null) return;
+                            
+                            // Optimistic Update
+                            setState(() {
+                               item.isChecked = value;
+                            });
+                            
+                            try {
+                              await apiService.toggleItem(item.id);
+                            } catch (e) {
+                               // Revert on error
+                               setState(() {
+                                 item.isChecked = !value;
+                               });
+                               ScaffoldMessenger.of(context).showSnackBar(
+                                 const SnackBar(content: Text('Erro ao atualizar item')),
+                               );
+                            }
+                          },
                         ),
-                      ),
-                      subtitle: Text(
-                        '${item.quantity}x R\$ ${item.price.toStringAsFixed(2)} = R\$ ${item.total.toStringAsFixed(2)}\n${item.category}',
-                        style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade700),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            onPressed: () => _showEditItemDialog(item),
+                        title: Text(
+                          item.name,
+                          style: TextStyle(
+                            decoration: item.isChecked ? TextDecoration.lineThrough : null,
+                            color: item.isChecked ? Colors.grey : (isDark ? Colors.white : Colors.black),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.grey),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Excluir Item?'),
-                                  content: Text('Deseja remover "${item.name}" da lista?'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('Cancelar'),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () async {
-                                        try {
-                                          await apiService.deleteItem(item.id);
-                                          Navigator.pop(context);
-                                          _loadList();
-                                        } catch (e) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Erro ao excluir item')),
-                                          );
-                                        }
-                                      },
-                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-                                      child: const Text('Excluir'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        ],
+                        ),
+                        subtitle: Text(
+                          '${item.quantity}x R\$ ${item.price.toStringAsFixed(2)} = R\$ ${item.total.toStringAsFixed(2)}\n${item.category}',
+                          style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade700),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () => _showEditItemDialog(item),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.grey),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Excluir Item?'),
+                                    content: Text('Deseja remover "${item.name}" da lista?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('Cancelar'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () async {
+                                          try {
+                                            await apiService.deleteItem(item.id);
+                                            Navigator.pop(context);
+                                            _loadList();
+                                          } catch (e) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text('Erro ao excluir item')),
+                                            );
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                                        child: const Text('Excluir'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },

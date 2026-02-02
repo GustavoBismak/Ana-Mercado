@@ -438,9 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   subtitle: Text('Total: R\$ ${list.totalValue.toStringAsFixed(2)}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.check_circle_outline, color: Colors.green, size: 30),
-                    tooltip: 'Finalizar Compra',
+                  trailing: OutlinedButton(
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -470,6 +468,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       );
                     },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.green,
+                      side: const BorderSide(color: Colors.green),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: const Text('Finalizar Lista', style: TextStyle(fontSize: 12)),
                   ),
                    onTap: () async {
                    await Navigator.push(
