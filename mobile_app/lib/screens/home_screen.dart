@@ -428,64 +428,80 @@ class _HomeScreenState extends State<HomeScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  title: Text(
-                    list.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Text('Total: R\$ ${list.totalValue.toStringAsFixed(2)}'),
-                  trailing: OutlinedButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Finalizar Lista?'),
-                          content: const Text('Isso moverá a lista para o histórico.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('Cancelar'),
-                            ),
-                            ElevatedButton(
-                              onPressed: () async {
-                                try {
-                                  await apiService.completeList(list.id);
-                                  Navigator.pop(context); // Close dialog
-                                  _refreshLists(); // Refresh home
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Erro ao finalizar')),
-                                  );
-                                }
-                              },
-                              child: const Text('Finalizar'),
-                            ),
-                          ],
+                child: Column(
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      title: Text(
+                        list.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.green,
-                      side: const BorderSide(color: Colors.green),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      trailing: OutlinedButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Finalizar Lista?'),
+                              content: const Text('Isso moverá a lista para o histórico.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancelar'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    try {
+                                      await apiService.completeList(list.id);
+                                      Navigator.pop(context); // Close dialog
+                                      _refreshLists(); // Refresh home
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Erro ao finalizar')),
+                                      );
+                                    }
+                                  },
+                                  child: const Text('Finalizar'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.green,
+                          side: const BorderSide(color: Colors.green),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: const Text('Finalizar Lista', style: TextStyle(fontSize: 10)),
+                      ),
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ListDetailScreen(listId: list.id, userId: widget.userId),
+                          ),
+                        );
+                        _refreshLists();
+                      },
+                    ),
+                    const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildFooterItem('Não marcados', list.totalUnchecked, Colors.grey.shade600, Theme.of(context).brightness == Brightness.dark),
+                          _buildFooterItem('Marcados', list.totalValue, Colors.green, Theme.of(context).brightness == Brightness.dark),
+                          _buildFooterItem('Total', list.totalFull, Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade800, Theme.of(context).brightness == Brightness.dark),
+                        ],
                       ),
                     ),
-                    child: const Text('Finalizar Lista', style: TextStyle(fontSize: 12)),
-                  ),
-                   onTap: () async {
-                   await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ListDetailScreen(listId: list.id, userId: widget.userId),
-                      ),
-                    );
-                    _refreshLists();
-                  },
+                  ],
                 ),
               );
             },
@@ -497,6 +513,22 @@ class _HomeScreenState extends State<HomeScreen> {
         label: const Text('Nova Lista'),
         icon: const Icon(Icons.add),
       ),
+    );
+  }
+
+  Widget _buildFooterItem(String label, double value, Color color, bool isDark) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'R\$ ${value.toStringAsFixed(2)}',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+        ),
+      ],
     );
   }
 }

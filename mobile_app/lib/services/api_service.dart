@@ -19,15 +19,15 @@ class ApiService {
       // This matches where the backend is serving the files from.
       return '${Uri.base.origin}/api';
     }
-    // Mobile/Emulator - Local Network IP
-    return 'http://192.168.3.15:5000/api';
+    // Mobile/Emulator - Using DuckDNS for stable connection
+    return 'https://anamercado.duckdns.org/api';
   }
 
   static String get baseUrlRaw {
     if (kIsWeb) {
       return Uri.base.origin;
     }
-    return 'http://192.168.3.15:5000';
+    return 'https://anamercado.duckdns.org';
   }
 
   static Future<Map<String, dynamic>> getDashboard() async {

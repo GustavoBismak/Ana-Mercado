@@ -58,35 +58,70 @@ class _HistoryScreenState extends State<HistoryScreen> {
               final list = snapshot.data![index];
               return Card(
                 color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
-                child: ListTile(
-                  title: Text(
-                    list.name,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black,
-                      decoration: TextDecoration.lineThrough,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Total: R\$ ${list.totalValue.toStringAsFixed(2)}\nRealizado em: ${list.createdAt.split("T")[0]}',
-                    style: TextStyle(color: isDark ? Colors.grey : Colors.black54),
-                  ),
-                  trailing: const Icon(Icons.check_circle, color: Colors.green),
-                  onTap: () {
-                     Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ListDetailScreen(listId: list.id, userId: widget.userId),
+                elevation: 3,
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                child: Column(
+                  children: [
+                    ListTile(
+                      title: Text(
+                        list.name,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black,
+                          decoration: TextDecoration.lineThrough,
+                        ),
                       ),
-                    );
-                  },
+                      subtitle: Text(
+                        'Realizado em: ${list.createdAt.split("T")[0]}',
+                        style: TextStyle(color: isDark ? Colors.grey : Colors.black54),
+                      ),
+                      trailing: const Icon(Icons.check_circle, color: Colors.green),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ListDetailScreen(listId: list.id, userId: widget.userId),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildFooterItem('Não marcados', list.totalUnchecked, Colors.grey.shade600, isDark),
+                          _buildFooterItem('Marcados', list.totalValue, Colors.green, isDark),
+                          _buildFooterItem('Total', list.totalFull, isDark ? Colors.blue.shade300 : Colors.blue.shade800, isDark),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
           );
         },
       ),
+    );
+  }
+
+  Widget _buildFooterItem(String label, double value, Color color, bool isDark) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'R\$ ${value.toStringAsFixed(2)}',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+        ),
+      ],
     );
   }
 }

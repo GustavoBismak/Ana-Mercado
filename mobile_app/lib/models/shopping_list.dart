@@ -4,6 +4,8 @@ class ShoppingList {
   final int id;
   final String name;
   final double totalValue;
+  final double totalUnchecked;
+  final double totalFull;
   final String createdAt;
   final bool isCompleted;
   final List<Item> items;
@@ -12,6 +14,8 @@ class ShoppingList {
     required this.id,
     required this.name,
     required this.totalValue,
+    required this.totalUnchecked,
+    required this.totalFull,
     required this.createdAt,
     this.isCompleted = false,
     this.items = const [],
@@ -22,6 +26,8 @@ class ShoppingList {
       id: json['id'],
       name: json['name'],
       totalValue: (json['total_value'] ?? 0).toDouble(),
+      totalUnchecked: (json['total_unchecked'] ?? 0).toDouble(),
+      totalFull: (json['total_full'] ?? 0).toDouble(),
       createdAt: json['created_at'] ?? '',
       isCompleted: json['is_completed'] ?? false,
       items: (json['items'] as List<dynamic>?)

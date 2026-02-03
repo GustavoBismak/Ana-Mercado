@@ -129,6 +129,16 @@ class ShoppingList(db.Model):
         # Only sum items that are marked as bought (checked)
         return sum(item.total for item in self.items if item.is_checked)
 
+    @property
+    def total_unchecked(self):
+        # Sum items that are NOT marked as bought
+        return sum(item.total for item in self.items if not item.is_checked)
+
+    @property
+    def total_full(self):
+        # Total sum of everything
+        return sum(item.total for item in self.items)
+
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -255,6 +265,8 @@ def api_get_lists(current_api_user):
         'id': l.id, 
         'name': l.name, 
         'total_value': l.total_value,
+        'total_unchecked': l.total_unchecked,
+        'total_full': l.total_full,
         'created_at': l.created_at.isoformat(),
         'is_completed': l.is_completed
     } for l in lists])
