@@ -4,6 +4,8 @@ import '../models/shopping_list.dart';
 import '../models/item.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CurrencyInputFormatter extends TextInputFormatter {
   final NumberFormat _formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
@@ -40,11 +42,105 @@ class ListDetailScreen extends StatefulWidget {
 class _ListDetailScreenState extends State<ListDetailScreen> {
   final ApiService apiService = ApiService();
   late Future<ShoppingList> futureList;
+  
+  // Tutorial Keys
+  final GlobalKey _summaryKey = GlobalKey();
+  final GlobalKey _addItemKey = GlobalKey();
+  List<TargetFocus> targets = [];
 
   @override
   void initState() {
     super.initState();
     _loadList();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkFirstAccess();
+    });
+  }
+
+  Future<void> _checkFirstAccess() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool isFirstTime = prefs.getBool('first_time_detail') ?? true;
+    
+    if (isFirstTime) {
+      _initTargets();
+      _showTutorial();
+      await prefs.setBool('first_time_detail', false);
+    }
+  }
+
+  void _initTargets() {
+    targets.add(
+      TargetFocus(
+        identify: "summaryKey",
+        keyTarget: _summaryKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    "Controle de Gastos",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Aqui você acompanha o valor total e quanto já colocou no carrinho.",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "addItemKey",
+        keyTarget: _addItemKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    "Adicione Produtos",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Use este botão para adicionar novos itens à sua lista.",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                      "Dica: Você pode arrastar um item para o lado para excluí-lo!",
+                      style: TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTutorial() {
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.blue.shade900,
+      textSkip: "PULAR",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+    ).show(context: context);
   }
 
   void _loadList() {
@@ -310,6 +406,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
           body: Column(
             children: [
                Container(
+                key: _summaryKey,
                 padding: const EdgeInsets.all(16.0),
                 color: isDark ? const Color(0xFF2C2C2C) : Colors.blue.shade50,
                 child: Column(
@@ -467,6 +564,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
           floatingActionButton: FloatingActionButton.extended(
+            key: _addItemKey,
             onPressed: _showAddItemDialog,
             icon: const Icon(Icons.add_shopping_cart),
             label: const Text('Adicionar Item'),

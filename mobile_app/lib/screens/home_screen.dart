@@ -10,6 +10,7 @@ import 'history_screen.dart';
 
 import 'notifications_screen.dart';
 import 'suggestion_screen.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class HomeScreen extends StatefulWidget {
   final String username;
@@ -37,6 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _profilePic;
   late String _displayName;
   bool _hasUnreadNotifications = false;
+  
+  // Tutorial Keys
+  final GlobalKey _menuKey = GlobalKey();
+  final GlobalKey _fabKey = GlobalKey();
+  List<TargetFocus> targets = [];
 
   @override
   void initState() {
@@ -47,6 +53,94 @@ class _HomeScreenState extends State<HomeScreen> {
         ? widget.initialDisplayName! 
         : _deriveDisplayNameFromEmail(widget.username);
     _checkNotifications();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkFirstAccess();
+    });
+  }
+
+  Future<void> _checkFirstAccess() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool isFirstTime = prefs.getBool('first_time_home') ?? true;
+    
+    if (isFirstTime) {
+      _initTargets();
+      _showTutorial();
+      await prefs.setBool('first_time_home', false);
+    }
+  }
+
+  void _initTargets() {
+    targets.add(
+      TargetFocus(
+        identify: "menuKey",
+        keyTarget: _menuKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    "Bem-vinda, Ana!",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Aqui no menu você encontra o Histórico de Compras, Estatísticas e Sugestões.",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    targets.add(
+      TargetFocus(
+        identify: "fabKey",
+        keyTarget: _fabKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controller) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    "Comece por aqui!",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Clique aqui para criar sua primeira lista de compras.",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTutorial() {
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.blue.shade900,
+      textSkip: "PULAR",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        print("Tutorial finalizado");
+      },
+    ).show(context: context);
   }
 
   Future<void> _checkNotifications() async {
@@ -145,6 +239,13 @@ class _HomeScreenState extends State<HomeScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+          ),
+        ),
+        leading: Builder(
+          builder: (context) => IconButton(
+            key: _menuKey,
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
         title: Column(
@@ -509,6 +610,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
+        key: _fabKey,
         onPressed: _showCreateListDialog,
         label: const Text('Nova Lista'),
         icon: const Icon(Icons.add),
