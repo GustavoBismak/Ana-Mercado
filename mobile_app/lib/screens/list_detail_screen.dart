@@ -103,7 +103,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                           decoration: const InputDecoration(labelText: 'Preço'),
                           keyboardType: TextInputType.number,
                           inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
                             CurrencyInputFormatter(),
                           ],
                         ),
@@ -216,7 +215,6 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                           decoration: const InputDecoration(labelText: 'Preço'),
                           keyboardType: TextInputType.number,
                           inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
                             CurrencyInputFormatter(),
                           ],
                         ),
