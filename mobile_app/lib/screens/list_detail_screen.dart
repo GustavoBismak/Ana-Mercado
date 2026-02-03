@@ -2,6 +2,30 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/shopping_list.dart';
 import '../models/item.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+
+class CurrencyInputFormatter extends TextInputFormatter {
+  final NumberFormat _formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.selection.baseOffset == 0) {
+      return newValue;
+    }
+
+    String newText = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (newText.isEmpty) newText = '0';
+    
+    double value = double.parse(newText) / 100;
+    String formattedText = _formatter.format(value);
+
+    return newValue.copyWith(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
+    );
+  }
+}
 
 class ListDetailScreen extends StatefulWidget {
   final int listId;
@@ -32,7 +56,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   void _showAddItemDialog() async {
     final nameController = TextEditingController();
     final quantityController = TextEditingController(text: '1');
-    final priceController = TextEditingController();
+    final priceController = TextEditingController(text: 'R\$ 0,00');
     String selectedCategory = 'Outros';
     
     // Fetch categories dynamically
@@ -76,8 +100,12 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                       Expanded(
                         child: TextField(
                           controller: priceController,
-                          decoration: const InputDecoration(labelText: 'Preço (R\$)'),
-                          keyboardType: TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(labelText: 'Preço'),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            CurrencyInputFormatter(),
+                          ],
                         ),
                       ),
                     ],
@@ -115,7 +143,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                           widget.listId,
                           nameController.text,
                           int.parse(quantityController.text),
-                          double.parse(priceController.text.replaceAll(',', '.')),
+                          double.parse(priceController.text.replaceAll('R\$', '').replaceAll('.', '').replaceAll(',', '.').trim()),
                           selectedCategory,
                         );
                         Navigator.pop(context);
@@ -140,7 +168,10 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   void _showEditItemDialog(Item item) async {
     final nameController = TextEditingController(text: item.name);
     final quantityController = TextEditingController(text: item.quantity.toString());
-    final priceController = TextEditingController(text: item.price.toStringAsFixed(2));
+    
+    // Initial value for bank-like mask
+    String initialPrice = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(item.price);
+    final priceController = TextEditingController(text: initialPrice);
     String selectedCategory = item.category;
     
     // Fetch categories dynamically
@@ -182,8 +213,12 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                       Expanded(
                         child: TextField(
                           controller: priceController,
-                          decoration: const InputDecoration(labelText: 'Preço (R\$)'),
-                          keyboardType: TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(labelText: 'Preço'),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            CurrencyInputFormatter(),
+                          ],
                         ),
                       ),
                     ],
@@ -221,7 +256,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
                           item.id,
                           nameController.text,
                           int.parse(quantityController.text),
-                          double.parse(priceController.text.replaceAll(',', '.')),
+                          double.parse(priceController.text.replaceAll('R\$', '').replaceAll('.', '').replaceAll(',', '.').trim()),
                           selectedCategory,
                         );
                         Navigator.pop(context);
