@@ -98,6 +98,7 @@ class User(UserMixin, db.Model):
     profile_pic = db.Column(db.String(255), nullable=True)
     display_name = db.Column(db.String(100), nullable=True)
     api_token = db.Column(db.String(100), unique=True, nullable=True)
+    shopping_lists = db.relationship('ShoppingList', backref='user', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -536,6 +537,18 @@ def admin_suggestions_page():
         
     suggestions = Suggestion.query.order_by(Suggestion.created_at.desc()).all()
     return render_template('admin_suggestions.html', suggestions=suggestions)
+
+@app.route('/admin/users')
+@login_required
+def admin_users_page():
+    # Security: Only allow specific admins
+    allowed_users = ['admin', 'bismakgustavo3@gmail.com']
+    
+    if current_user.username not in allowed_users:
+        return "Acesso Negado: Você não tem permissão para acessar esta página.", 403
+        
+    users = User.query.all()
+    return render_template('admin_users.html', users=users)
 
 # Category Routes
 @app.route('/api/categories', methods=['GET'])
