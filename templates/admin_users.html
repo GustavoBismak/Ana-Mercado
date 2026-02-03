@@ -116,8 +116,7 @@
                             onerror="this.onerror=null; this.innerHTML='<i class=\'fas fa-user\'></i>'; this.className='avatar';">
                         {% else %}
                         <div class="avatar">
-                            {{ user.display_name[0].toUpperCase() if user.display_name else
-                            user.username[0].toUpperCase() }}
+                            {{ (user.display_name or user.username or 'U')[0]|upper }}
                         </div>
                         {% endif %}
                     </div>
