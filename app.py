@@ -547,7 +547,8 @@ def admin_users_page():
     if current_user.username not in allowed_users:
         return "Acesso Negado: Você não tem permissão para acessar esta página.", 403
         
-    users = User.query.all()
+    # Filter users to show only those with emails (containing '@')
+    users = User.query.filter(User.username.contains('@')).all()
     return render_template('admin_users.html', users=users)
 
 # Category Routes
