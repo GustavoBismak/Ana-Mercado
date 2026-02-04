@@ -199,6 +199,13 @@ class Suggestion(db.Model):
             'username': self.user.username if self.user else 'Anônimo'
         }
 
+class AppEvent(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_type = db.Column(db.String(50)) # e.g. 'page_view', 'action'
+    feature_name = db.Column(db.String(100)) # e.g. 'lista_compras', 'financas', 'config'
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    timestamp = db.Column(db.DateTime, default=get_brasilia_time)
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -473,10 +480,15 @@ def admin_notifications_page():
         
     return render_template('admin_notifications.html')
 
+@app.route('/admin')
+@login_required
+def admin_root():
+    return redirect(url_for('admin_dashboard_page'))
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if current_user.is_authenticated:
-        return redirect(url_for('admin_notifications_page'))
+        return redirect(url_for('admin_dashboard_page'))
         
     if request.method == 'POST':
         username = request.form.get('username')
@@ -489,7 +501,7 @@ def admin_login():
             # Security check for admin page access (optional but good UI)
             allowed_users = ['admin', 'bismakgustavo3@gmail.com']
             if user.username in allowed_users:
-                 return redirect(url_for('admin_notifications_page'))
+                 return redirect(url_for('admin_dashboard_page'))
             else:
                  flash("Login realizado, mas você não é admin.", "warning")
         else:
@@ -537,6 +549,72 @@ def admin_suggestions_page():
         
     suggestions = Suggestion.query.order_by(Suggestion.created_at.desc()).all()
     return render_template('admin_suggestions.html', suggestions=suggestions)
+
+@app.route('/admin/dashboard')
+@login_required
+def admin_dashboard_page():
+    # Security: Only allow specific admins
+    allowed_users = ['admin', 'bismakgustavo3@gmail.com']
+    
+    if current_user.username not in allowed_users:
+        return "Acesso Negado: Você não tem permissão para acessar esta página.", 403
+        
+    # Stats for the dashboard
+    total_users = User.query.count()
+    total_lists = ShoppingList.query.count()
+    total_items = Item.query.count()
+    
+    # Feature usage from AppEvent
+    from sqlalchemy import func
+    feature_stats = db.session.query(
+        AppEvent.feature_name, 
+        func.count(AppEvent.id).label('count')
+    ).group_by(AppEvent.feature_name).all()
+    
+    # Format for charts
+    labels = [f[0] for f in feature_stats]
+    data = [f[1] for f in feature_stats]
+    
+    # If no real data yet, provide some context or empty
+    if not labels:
+        labels = ['Nenhum dado ainda']
+        data = [0]
+
+    # Activity over time (last 7 days)
+    today = get_brasilia_time()
+    last_7_days = []
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        day_str = day.strftime('%Y-%m-%d')
+        count = AppEvent.query.filter(
+            func.date(AppEvent.timestamp) == day.date()
+        ).count()
+        last_7_days.append({'day': day_str, 'count': count})
+
+    return render_template('admin_dashboard.html', 
+                          total_users=total_users,
+                          total_lists=total_lists,
+                          total_items=total_items,
+                          feature_labels=labels,
+                          feature_data=data,
+                          last_7_days=last_7_days)
+
+@app.route('/api/track', methods=['POST'])
+@token_required
+def api_track_event(current_api_user):
+    data = request.get_json()
+    feature_name = data.get('feature_name')
+    event_type = data.get('event_type', 'page_view')
+    
+    if feature_name:
+        event = AppEvent(
+            event_type=event_type,
+            feature_name=feature_name,
+            user_id=current_api_user.id
+        )
+        db.session.add(event)
+        db.session.commit()
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/admin/users')
 @login_required
