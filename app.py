@@ -566,19 +566,23 @@ def admin_dashboard_page():
     
     # Feature usage from AppEvent
     from sqlalchemy import func
-    feature_stats = db.session.query(
+    feature_stats_query = db.session.query(
         AppEvent.feature_name, 
         func.count(AppEvent.id).label('count')
-    ).group_by(AppEvent.feature_name).all()
+    ).group_by(AppEvent.feature_name).order_by(func.count(AppEvent.id).desc()).all()
     
     # Format for charts
-    labels = [f[0] for f in feature_stats]
-    data = [f[1] for f in feature_stats]
+    labels = [f[0] for f in feature_stats_query]
+    data = [f[1] for f in feature_stats_query]
+    
+    # Results as list of dicts for the table
+    feature_list = [{'name': f[0], 'count': f[1]} for f in feature_stats_query]
     
     # If no real data yet, provide some context or empty
     if not labels:
         labels = ['Nenhum dado ainda']
         data = [0]
+        feature_list = []
 
     # Activity over time (last 7 days)
     today = get_brasilia_time()
@@ -597,6 +601,7 @@ def admin_dashboard_page():
                           total_items=total_items,
                           feature_labels=labels,
                           feature_data=data,
+                          feature_list=feature_list,
                           last_7_days=last_7_days)
 
 @app.route('/api/track', methods=['POST'])
