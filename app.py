@@ -12,8 +12,14 @@ import random
 from werkzeug.utils import secure_filename
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+static_web_folder = os.path.join(basedir, 'mobile_app', 'build', 'web')
+
+print(f"DEBUG: Servindo arquivos estáticos de: {static_web_folder}")
+if not os.path.exists(static_web_folder):
+    print(f"AVISO: A pasta {static_web_folder} NÃO FOI ENCONTRADA no servidor!")
+
 app = Flask(__name__, 
-            static_folder=os.path.join(basedir, 'mobile_app', 'build', 'web'), 
+            static_folder=static_web_folder, 
             template_folder=os.path.join(basedir, 'templates'))
 # Enable CORS for all routes (allows Flutter Web to talk to Python)
 CORS(app)
