@@ -12,8 +12,20 @@ import random
 from werkzeug.utils import secure_filename
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+flutter_web_dir = os.path.join(basedir, 'mobile_app', 'build', 'web')
+
+# Diagnóstico de Inicialização
+print(f"--- DIAGNÓSTICO DE CAMINHO ---")
+print(f"Base Directory: {basedir}")
+print(f"Tentando serve de: {flutter_web_dir}")
+if os.path.exists(os.path.join(flutter_web_dir, 'index.html')):
+    print("✅ SUCESSO: index.html encontrado!")
+else:
+    print("❌ ERRO: index.html NÃO encontrado neste caminho!")
+print(f"------------------------------")
+
 app = Flask(__name__, 
-            static_folder=os.path.join(basedir, 'mobile_app', 'build', 'web'), 
+            static_folder=flutter_web_dir, 
             template_folder=os.path.join(basedir, 'templates'))
 # Enable CORS for all routes (allows Flutter Web to talk to Python)
 CORS(app)
