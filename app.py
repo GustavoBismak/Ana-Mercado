@@ -11,15 +11,26 @@ import os
 import random
 from werkzeug.utils import secure_filename
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-static_web_folder = os.path.join(basedir, 'mobile_app', 'build', 'web')
+# Helper to find the web folder
+def get_static_folder():
+    paths_to_check = [
+        os.path.join(basedir, 'mobile_app', 'build', 'web'),
+        os.path.join(basedir, 'mobile_app', 'build', 'web'),
+        'mobile_app/build/web',
+        '/home/ubuntu/Ana-Mercado/mobile_app/build/web' # common linux path
+    ]
+    for p in paths_to_check:
+        full_p = os.path.abspath(p)
+        if os.path.exists(full_p) and os.path.isdir(full_p):
+            return full_p
+    return os.path.join(basedir, 'mobile_app', 'build', 'web') # fallback
 
+static_web_folder = get_static_folder()
 print(f"DEBUG: Servindo arquivos estáticos de: {static_web_folder}")
-if not os.path.exists(static_web_folder):
-    print(f"AVISO: A pasta {static_web_folder} NÃO FOI ENCONTRADA no servidor!")
 
 app = Flask(__name__, 
             static_folder=static_web_folder, 
+            static_url_path='',
             template_folder=os.path.join(basedir, 'templates'))
 # Enable CORS for all routes (allows Flutter Web to talk to Python)
 CORS(app)
@@ -27,24 +38,30 @@ CORS(app)
 def get_brasilia_time():
     return datetime.now(timezone(timedelta(hours=-3)))
 
+@app.route('/debug-path')
+def debug_path():
+    files = []
+    if os.path.exists(app.static_folder):
+        files = os.listdir(app.static_folder)
+    return jsonify({
+        'static_folder': app.static_folder,
+        'exists': os.path.exists(app.static_folder),
+        'files_count': len(files),
+        'files': files[:10] # show first 10
+    })
+
 @app.route('/')
 def serve_flutter_app():
     return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/<path:path>')
 def catch_all(path):
-    print(f"DEBUG: Requesting path -> {path}")
-    if path.startswith('api'):
-        return jsonify({'error': 'Not found'}), 404
-    
-    # Check if file exists in static folder (build/web)
+    # Check if file exists in static folder
     full_path = os.path.join(app.static_folder, path)
     if os.path.exists(full_path) and os.path.isfile(full_path):
-        print(f"DEBUG: Serving file -> {full_path}")
         return send_from_directory(app.static_folder, path)
-
-    # Otherwise return index.html for Flutter routing
-    print(f"DEBUG: Serving index.html for -> {path}")
+    
+    # Otherwise return index.html for Flutter routing (SPA)
     return send_from_directory(app.static_folder, 'index.html')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ana_mercado_v6.db'
