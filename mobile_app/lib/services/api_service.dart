@@ -408,4 +408,19 @@ class ApiService {
       return false;
     }
   }
+
+  Future<void> trackEvent(String featureName, {String eventType = 'page_view'}) async {
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/track'),
+        headers: await _getHeaders(),
+        body: jsonEncode({
+          'feature_name': featureName,
+          'event_type': eventType,
+        }),
+      );
+    } catch (e) {
+      debugPrint('Error tracking event: $e');
+    }
+  }
 }

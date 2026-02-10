@@ -22,6 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadStats();
+    apiService.trackEvent('dashboard');
   }
   
   void _loadStats({String? month}) {

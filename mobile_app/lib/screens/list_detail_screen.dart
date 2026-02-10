@@ -52,6 +52,7 @@ class _ListDetailScreenState extends State<ListDetailScreen> {
   void initState() {
     super.initState();
     _loadList();
+    apiService.trackEvent('lista_detalhe');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkFirstAccess();
     });

@@ -620,6 +620,8 @@ def api_track_event(current_api_user):
     feature_name = data.get('feature_name')
     event_type = data.get('event_type', 'page_view')
     
+    print(f"📈 [TRACK] Usuário {current_api_user.username} acessou: {feature_name} ({event_type})")
+    
     if feature_name:
         event = AppEvent(
             event_type=event_type,

@@ -53,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ? widget.initialDisplayName! 
         : _deriveDisplayNameFromEmail(widget.username);
     _checkNotifications();
+    apiService.trackEvent('home');
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkFirstAccess();
