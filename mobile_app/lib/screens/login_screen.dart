@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -169,7 +170,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           obscureText: _obscureText,
                         ),
-                        const SizedBox(height: 32),
+
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                               Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                                );
+                            },
+                            child: const Text('Esqueceu a senha?'),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         SizedBox(
                           height: 54,
                           child: ElevatedButton(

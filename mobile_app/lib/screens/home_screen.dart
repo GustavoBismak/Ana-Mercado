@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   Text(
-                    "Bem-vinda, Ana!",
+                    "Bem-vindo!",
                     style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),
                   ),
                   SizedBox(height: 10),
