@@ -142,6 +142,61 @@ class ApiService {
     }
   }
 
+
+  Future<Map<String, dynamic>> forgotPassword(String username) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/forgot-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': username}),
+      );
+      
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message']};
+      }
+      return {'success': false, 'message': data['error'] ?? 'Erro ao solicitar reset'};
+    } catch (e) {
+      return {'success': false, 'message': 'Erro de conexão: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyCode(String username, String code) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/verify-code'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': username, 'code': code}),
+      );
+      
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'reset_token': data['reset_token']};
+      }
+      return {'success': false, 'message': data['error'] ?? 'Código inválido'};
+    } catch (e) {
+      return {'success': false, 'message': 'Erro de conexão: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> resetPassword(String token, String newPassword) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/reset-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'token': token, 'new_password': newPassword}),
+      );
+      
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message']};
+      }
+      return {'success': false, 'message': data['error'] ?? 'Erro ao redefinir senha'};
+    } catch (e) {
+      return {'success': false, 'message': 'Erro de conexão: $e'};
+    }
+  }
+
   Future<bool> register(String username, String password) async {
     try {
       final response = await http.post(
@@ -373,6 +428,18 @@ class ApiService {
       return json.decode(response.body);
     } else {
       throw Exception('Failed to load notifications');
+    }
+  }
+
+  Future<bool> clearNotifications() async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/notifications'),
+        headers: await _getHeaders(),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
     }
   }
 

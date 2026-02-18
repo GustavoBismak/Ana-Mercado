@@ -42,6 +42,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       appBar: AppBar(
         title: Text('Notificações', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_sweep_outlined),
+            tooltip: 'Limpar tudo',
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Limpar notificações'),
+                  content: const Text('Deseja remover todas as notificações?'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Limpar')),
+                  ],
+                ),
+              );
+
+              if (confirm == true) {
+                final success = await apiService.clearNotifications();
+                if (success) {
+                  setState(() {
+                    futureNotifications = apiService.getNotifications();
+                  });
+                }
+              }
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<List<dynamic>>(
         future: futureNotifications,

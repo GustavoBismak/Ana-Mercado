@@ -35,6 +35,10 @@ def get_brasilia_time():
 
 @app.route('/')
 def serve_flutter_app():
+    index_path = os.path.join(app.static_folder, 'index.html')
+    if not os.path.exists(index_path):
+        # Fallback if Flutter Web App is not built
+        return redirect(url_for('admin_login'))
     return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/<path:path>')
@@ -47,8 +51,19 @@ def catch_all(path):
     if os.path.exists(full_path) and os.path.isfile(full_path):
         return send_from_directory(app.static_folder, path)
 
-    # Otherwise return index.html for Flutter routing
-    return send_from_directory(app.static_folder, 'index.html')
+    # Otherwise return index.html for Flutter routing IF it exists
+    index_path = os.path.join(app.static_folder, 'index.html')
+    if os.path.exists(index_path):
+        print(f"DEBUG: Serving index.html for -> {path}")
+        return send_from_directory(app.static_folder, 'index.html')
+        
+    return "Página não encontrada (404). A versão Web do App pareca não estar compilada.", 404
+
+@app.route('/favicon.ico')
+def favicon():
+    # Serve from mobile_app/web/favicon.png if it exists, or handle gracefully
+    return send_from_directory(os.path.join(app.root_path, 'mobile_app', 'web'),
+                               'favicon.png', mimetype='image/vnd.microsoft.icon')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ana_mercado_v6.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -125,6 +140,13 @@ class UserSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     dark_mode = db.Column(db.Boolean, default=False)
     notifications_enabled = db.Column(db.Boolean, default=True)
+
+class PasswordResetRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    code = db.Column(db.String(6), nullable=False)
+    expiration = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
 
 class ShoppingList(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -470,10 +492,21 @@ def api_complete_list(current_api_user, list_id):
 @app.route('/api/notifications', methods=['GET'])
 @token_required
 def api_get_notifications(current_api_user):
-    # Optional: Filter notifications by user if needed
-    notifications = Notification.query.order_by(Notification.created_at.desc()).all()
+    # Optional: Filter notifications by user if needed - currently global
     notifications = Notification.query.order_by(Notification.created_at.desc()).all()
     return jsonify([n.to_dict() for n in notifications])
+
+@app.route('/api/notifications', methods=['DELETE'])
+@token_required
+def api_clear_notifications(current_api_user):
+    # For now, it clears all notifications as they are global
+    try:
+        Notification.query.delete()
+        db.session.commit()
+        return jsonify({'message': 'Notificações limpas com sucesso'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/admin/notifications')
 @login_required
@@ -517,6 +550,156 @@ def admin_login():
             flash("Credenciais inválidas. Tente novamente.", "danger")
             
     return render_template('admin_login.html')
+
+@app.route('/admin/forgot-password', methods=['GET', 'POST'])
+def admin_forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(username=email).first()
+        
+        if user:
+            # Generate 6-digit code
+            code = ''.join(random.choices('0123456789', k=6))
+            expiration = get_brasilia_time() + timedelta(minutes=15)
+            
+            reset_request = PasswordResetRequest(user_id=user.id, code=code, expiration=expiration)
+            db.session.add(reset_request)
+            db.session.commit()
+            
+            # TODO: Send email
+            print(f"\n========================================")
+            print(f" PASSWORD RESET CODE FOR {email}: {code}")
+            print(f"========================================\n")
+            
+            flash(f"Código enviado para {email}. Verifique seu email (e o console).", "info")
+            return render_template('admin_verify_code.html', email=email)
+        else:
+            flash("Email/Usuário não encontrado.", "danger")
+            
+    return render_template('admin_forgot_password.html')
+
+@app.route('/admin/verify-code', methods=['POST'])
+def admin_verify_code():
+    email = request.form.get('email')
+    code = request.form.get('code')
+    
+    user = User.query.filter_by(username=email).first()
+    if not user:
+         flash("User not found.", "danger")
+         return redirect(url_for('admin_forgot_password'))
+         
+    # Check valid code
+    reset_request = PasswordResetRequest.query.filter_by(user_id=user.id, code=code, used=False).filter(PasswordResetRequest.expiration > get_brasilia_time()).first()
+    
+    if reset_request:
+        reset_request.used = True
+        db.session.commit()
+        # Create a temporary secure token to allow password reset
+        token = f"{user.id}:{code}:{uuid.uuid4()}" # Simple token strategy
+        return render_template('admin_reset_password.html', token=token)
+    else:
+        flash("Código inválido ou expirado.", "danger")
+        return render_template('admin_verify_code.html', email=email)
+
+@app.route('/admin/reset-password', methods=['POST'])
+def admin_reset_password():
+    token = request.form.get('token')
+    password = request.form.get('password')
+    confirm_password = request.form.get('confirm_password')
+    
+    if password != confirm_password:
+        flash("As senhas não coincidem.", "danger")
+        return render_template('admin_reset_password.html', token=token) # Retry
+    
+    try:
+        user_id = int(token.split(':')[0])
+        user = User.query.get(user_id)
+        if user:
+            user.set_password(password)
+            db.session.commit()
+            flash("Senha redefinida com sucesso! Faça login.", "success")
+            return redirect(url_for('admin_login'))
+    except:
+        flash("Erro ao redefinir senha.", "danger")
+        
+    return redirect(url_for('admin_login'))
+
+# --- Mobile API Password Reset Endpoints ---
+
+@app.route('/api/auth/forgot-password', methods=['POST'])
+def api_forgot_password():
+    data = request.get_json()
+    username = data.get('username') # Mobile uses username field for email often
+    
+    if not username:
+        return jsonify({'error': 'Email/Usuário obrigatório'}), 400
+        
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        # Security: Don't reveal user existence, but for debug/UX we might say "If registered..."
+        # For this app, let's be explicit for now
+        return jsonify({'error': 'Usuário não encontrado'}), 404
+        
+    # Generate 6-digit code
+    code = ''.join(random.choices('0123456789', k=6))
+    expiration = get_brasilia_time() + timedelta(minutes=15)
+    
+    # Invalidate previous unused codes
+    PasswordResetRequest.query.filter_by(user_id=user.id, used=False).delete()
+    
+    reset_request = PasswordResetRequest(user_id=user.id, code=code, expiration=expiration)
+    db.session.add(reset_request)
+    db.session.commit()
+    
+    # TODO: Send email mechanism
+    print(f"\n========================================")
+    print(f" PASSWORD RESET CODE FOR {username}: {code}")
+    print(f"========================================\n")
+    
+    return jsonify({'message': 'Código enviado. Verifique seu email (ou console server).'})
+
+@app.route('/api/auth/verify-code', methods=['POST'])
+def api_verify_code():
+    data = request.get_json()
+    username = data.get('username')
+    code = data.get('code')
+    
+    user = User.query.filter_by(username=username).first()
+    if not user:
+         return jsonify({'error': 'Usuário não encontrado'}), 404
+         
+    # Check valid code
+    reset_request = PasswordResetRequest.query.filter_by(user_id=user.id, code=code, used=False).filter(PasswordResetRequest.expiration > get_brasilia_time()).first()
+    
+    if reset_request:
+        reset_request.used = True
+        db.session.commit()
+        # Create a temporary secure token to allow password reset
+        token = f"{user.id}:{code}:{uuid.uuid4()}" 
+        return jsonify({'message': 'Código válido', 'reset_token': token})
+    else:
+        return jsonify({'error': 'Código inválido ou expirado'}), 400
+
+@app.route('/api/auth/reset-password', methods=['POST'])
+def api_reset_password():
+    data = request.get_json()
+    token = data.get('token')
+    new_password = data.get('new_password')
+    
+    if not token or not new_password:
+        return jsonify({'error': 'Dados incompletos'}), 400
+    
+    try:
+        user_id = int(token.split(':')[0])
+        user = User.query.get(user_id)
+        if user:
+            user.set_password(new_password)
+            db.session.commit()
+            return jsonify({'message': 'Senha redefinida com sucesso'})
+        else:
+            return jsonify({'error': 'Usuário inválido'}), 400
+    except:
+         return jsonify({'error': 'Token inválido'}), 400
 
 @app.route('/api/notifications', methods=['POST'])
 def api_create_notification(): # Keep public or add Admin Check later
