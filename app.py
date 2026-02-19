@@ -47,6 +47,10 @@ def serve_flutter_app():
         return redirect(url_for('admin_login'))
     return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/5f7ed9ed49a424fc292ef68cda5b8003.txt')
+def mailjet_verification():
+    return "", 200
+
 @app.route('/<path:path>')
 def catch_all(path):
     if path.startswith('api'):

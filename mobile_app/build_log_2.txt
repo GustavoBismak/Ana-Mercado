@@ -1,0 +1,162 @@
+Running Gradle task 'assembleRelease'...                        
+lib/services/api_service.dart:12:18: Error: Can't find '}' to match '{'.
+class ApiService {
+                 ^
+lib/screens/home_screen.dart:50:30: Error: The method 'getLists' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getLists'.
+    futureLists = apiService.getLists(widget.userId);
+                             ^^^^^^^^
+lib/screens/home_screen.dart:148:46: Error: The method 'getNotifications' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getNotifications'.
+      final notifications = await apiService.getNotifications();
+                                             ^^^^^^^^^^^^^^^^
+lib/screens/home_screen.dart:173:32: Error: The method 'getLists' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getLists'.
+      futureLists = apiService.getLists(widget.userId);
+                               ^^^^^^^^
+lib/screens/home_screen.dart:211:38: Error: The method 'createList' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'createList'.
+                    await apiService.createList(nameController.text, widget.userId);
+                                     ^^^^^^^^^^
+lib/screens/home_screen.dart:277:58: Error: The method 'getNotifications' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getNotifications'.
+                  final notifications = await apiService.getNotifications();
+                                                         ^^^^^^^^^^^^^^^^
+lib/screens/home_screen.dart:558:56: Error: The method 'completeList' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'completeList'.
+                                      await apiService.completeList(list.id);
+                                                       ^^^^^^^^^^^^
+lib/screens/list_detail_screen.dart:148:31: Error: The method 'getListDetails' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getListDetails'.
+      futureList = apiService.getListDetails(widget.listId);
+                              ^^^^^^^^^^^^^^
+lib/screens/list_detail_screen.dart:161:40: Error: The method 'getCategories' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getCategories'.
+      final fetched = await apiService.getCategories(widget.userId);
+                                       ^^^^^^^^^^^^^
+lib/screens/list_detail_screen.dart:237:42: Error: The method 'addItem' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'addItem'.
+                        await apiService.addItem(
+                                         ^^^^^^^
+lib/screens/list_detail_screen.dart:275:40: Error: The method 'getCategories' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getCategories'.
+      final fetched = await apiService.getCategories(widget.userId);
+                                       ^^^^^^^^^^^^^
+lib/screens/list_detail_screen.dart:349:42: Error: The method 'updateItem' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'updateItem'.
+                        await apiService.updateItem(
+                                         ^^^^^^^^^^
+lib/screens/list_detail_screen.dart:493:48: Error: The method 'toggleItem' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'toggleItem'.
+                              await apiService.toggleItem(item.id);
+                                               ^^^^^^^^^^
+lib/screens/list_detail_screen.dart:539:62: Error: The method 'deleteItem' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'deleteItem'.
+                                            await apiService.deleteItem(item.id);
+                                                             ^^^^^^^^^^
+lib/screens/list_detail_screen.dart:471:44: Error: The method 'deleteItem' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'deleteItem'.
+                          await apiService.deleteItem(item.id);
+                                           ^^^^^^^^^^
+lib/screens/settings_screen.dart:153:52: Error: The method 'updateDisplayName' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'updateDisplayName'.
+                 final success = await _apiService.updateDisplayName(widget.userId, controller.text);
+                                                   ^^^^^^^^^^^^^^^^^
+lib/screens/dashboard_screen.dart:29:33: Error: The method 'getDashboardStats' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getDashboardStats'.
+      _statsFuture = apiService.getDashboardStats(widget.userId, month: month);
+                                ^^^^^^^^^^^^^^^^^
+lib/screens/history_screen.dart:24:32: Error: The method 'getLists' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getLists'.
+    futureHistory = apiService.getLists(widget.userId, completed: true);
+                               ^^^^^^^^
+lib/screens/history_screen.dart:29:34: Error: The method 'getLists' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getLists'.
+      futureHistory = apiService.getLists(widget.userId, completed: true);
+                                 ^^^^^^^^
+lib/screens/notifications_screen.dart:20:38: Error: The method 'getNotifications' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getNotifications'.
+    futureNotifications = apiService.getNotifications();
+                                     ^^^^^^^^^^^^^^^^
+lib/screens/suggestion_screen.dart:26:39: Error: The method 'sendSuggestion' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'sendSuggestion'.
+    final success = await _apiService.sendSuggestion(_controller.text);
+                                      ^^^^^^^^^^^^^^
+lib/screens/register_screen.dart:41:39: Error: The method 'register' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'register'.
+    final success = await _apiService.register(username, password);
+                                      ^^^^^^^^
+lib/screens/forgot_password_screen.dart:28:40: Error: The method 'forgotPassword' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'forgotPassword'.
+    final response = await _apiService.forgotPassword(email);
+                                       ^^^^^^^^^^^^^^
+lib/screens/forgot_password_screen.dart:47:40: Error: The method 'verifyCode' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'verifyCode'.
+    final response = await _apiService.verifyCode(email, code);
+                                       ^^^^^^^^^^
+lib/screens/forgot_password_screen.dart:71:40: Error: The method 'resetPassword' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'resetPassword'.
+    final response = await _apiService.resetPassword(_resetToken!, password);
+                                       ^^^^^^^^^^^^^
+lib/screens/category_management_screen.dart:29:44: Error: The method 'getCategories' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getCategories'.
+      final categories = await _apiService.getCategories(widget.userId);
+                                           ^^^^^^^^^^^^^
+lib/screens/category_management_screen.dart:62:47: Error: The method 'updateCategory' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'updateCategory'.
+                  success = await _apiService.updateCategory(category['id'], controller.text);
+                                              ^^^^^^^^^^^^^^
+lib/screens/category_management_screen.dart:64:47: Error: The method 'addCategory' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'addCategory'.
+                  success = await _apiService.addCategory(controller.text, widget.userId);
+                                              ^^^^^^^^^^^
+lib/screens/category_management_screen.dart:94:41: Error: The method 'deleteCategory' isn't defined for the type 'ApiService'.
+ - 'ApiService' is from 'package:ana_mercado_mobile/services/api_service.dart' ('lib/services/api_service.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'deleteCategory'.
+      final success = await _apiService.deleteCategory(id);
+                                        ^^^^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildRelease'.
+> Process 'command 'C:\Users\bisma\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 41s
+Running Gradle task 'assembleRelease'...                           41,9s
+Gradle task assembleRelease failed with exit code 1
