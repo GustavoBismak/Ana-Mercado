@@ -49,7 +49,7 @@ def serve_flutter_app():
 
 @app.route('/5f7ed9ed49a424fc292ef68cda5b8003.txt')
 def mailjet_verification():
-    return "", 200
+    return send_from_directory(app.static_folder, '5f7ed9ed49a424fc292ef68cda5b8003.txt', mimetype='text/plain')
 
 @app.route('/<path:path>')
 def catch_all(path):
