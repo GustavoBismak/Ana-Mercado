@@ -7,9 +7,15 @@ from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 import calendar
 import locale
+from dotenv import load_dotenv
 import os
 import random
 from werkzeug.utils import secure_filename
+
+# Load environment variables
+load_dotenv()
+
+from email_service import send_verification_code
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 flutter_web_dir = os.path.join(basedir, 'mobile_app', 'build', 'web')
@@ -562,16 +568,21 @@ def admin_forgot_password():
             code = ''.join(random.choices('0123456789', k=6))
             expiration = get_brasilia_time() + timedelta(minutes=15)
             
+            # Invalidate previous unused codes
+            PasswordResetRequest.query.filter_by(user_id=user.id, used=False).delete()
+            
             reset_request = PasswordResetRequest(user_id=user.id, code=code, expiration=expiration)
             db.session.add(reset_request)
             db.session.commit()
             
-            # TODO: Send email
-            print(f"\n========================================")
-            print(f" PASSWORD RESET CODE FOR {email}: {code}")
-            print(f"========================================\n")
+            # Send email via Resend
+            success = send_verification_code(email, code)
             
-            flash(f"Código enviado para {email}. Verifique seu email (e o console).", "info")
+            if success:
+                flash(f"Código enviado para {email}. Verifique seu email.", "info")
+            else:
+                flash(f"Erro ao enviar email. Mas o código gerado foi: {code} (apenas para teste)", "warning")
+                
             return render_template('admin_verify_code.html', email=email)
         else:
             flash("Email/Usuário não encontrado.", "danger")
@@ -651,12 +662,16 @@ def api_forgot_password():
     db.session.add(reset_request)
     db.session.commit()
     
-    # TODO: Send email mechanism
-    print(f"\n========================================")
-    print(f" PASSWORD RESET CODE FOR {username}: {code}")
-    print(f"========================================\n")
+    # Send email via Resend
+    success = send_verification_code(username, code)
     
-    return jsonify({'message': 'Código enviado. Verifique seu email (ou console server).'})
+    if success:
+        return jsonify({'message': 'Código enviado. Verifique seu email.'})
+    else:
+        return jsonify({
+            'message': 'Falha ao enviar email, mas o código foi gerado.',
+            'debug_code': code # Remove in production
+        }), 200 # Return 200 so the app can continue if it's for debug
 
 @app.route('/api/auth/verify-code', methods=['POST'])
 def api_verify_code():
