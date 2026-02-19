@@ -1,22 +1,38 @@
 import os
-import resend
+from mailjet_rest import Client
 from dotenv import load_dotenv
 
-# Load environment variables from .env
+# Load environment variables
 load_dotenv()
 
-resend.api_key = os.environ.get("RESEND_API_KEY")
+api_key = os.environ.get('MJ_APIKEY_PUBLIC')
+api_secret = os.environ.get('MJ_APIKEY_PRIVATE')
 
 def send_verification_code(email, code):
     """
-    Sends a verification code to the user's email using Resend API.
+    Sends a verification code using Mailjet API.
     """
-    try:
-        params = {
-            "from": "Ana Mercado <onboarding@resend.dev>",
-            "to": [email],
-            "subject": f"{code} é o seu código de verificação",
-            "html": f"""
+    if not api_key or not api_secret or "COLOQUE_AQUI" in api_secret:
+        print("Erro: Mailjet API Key ou Secret Key não configurada corretamente no .env")
+        return False
+
+    mailjet = Client(auth=(api_key, api_secret), version='v3.1')
+    
+    data = {
+      'Messages': [
+        {
+          "From": {
+            "Email": "bismakgustavo3@gmail.com", # Substitua pelo seu email verificado no Mailjet
+            "Name": "Ana Mercado"
+          },
+          "To": [
+            {
+              "Email": email,
+              "Name": "Usuário"
+            }
+          ],
+          "Subject": f"{code} é o seu código de verificação",
+          "HTMLPart": f"""
             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e1e7f0;">
                 <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); padding: 40px 20px; text-align: center;">
                     <h1 style="color: #ffffff; margin: 0; font-size: 28px; letter-spacing: -1px;">Ana Mercado</h1>
@@ -40,12 +56,19 @@ def send_verification_code(email, code):
                     <p style="margin: 0; font-size: 14px; color: #9ca3af;">&copy; 2024 Ana Mercado. App de Gestão Inteligente.</p>
                 </div>
             </div>
-            """,
+            """
         }
-
-        email_response = resend.Emails.send(params)
-        print(f"Email sent successfully to {email}: {email_response}")
-        return True
+      ]
+    }
+    
+    try:
+        result = mailjet.send.create(data=data)
+        if result.status_code == 200:
+            print(f"Email enviado com sucesso via Mailjet para {email}")
+            return True
+        else:
+            print(f"Erro ao enviar e-mail via Mailjet: {result.status_code} - {result.json()}")
+            return False
     except Exception as e:
-        print(f"Error sending email with Resend: {e}")
+        print(f"Exceção ao enviar e-mail via Mailjet: {e}")
         return False
