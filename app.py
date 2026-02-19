@@ -49,7 +49,8 @@ def serve_flutter_app():
 
 @app.route('/30b9cf98b3ffad37dcb0739a5c5fa527.txt')
 def mailjet_verification():
-    return "", 200
+    from flask import Response
+    return Response("", mimetype='text/plain')
 
 @app.route('/<path:path>')
 def catch_all(path):
