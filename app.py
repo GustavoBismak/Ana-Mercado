@@ -47,9 +47,9 @@ def serve_flutter_app():
         return redirect(url_for('admin_login'))
     return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/5f7ed9ed49a424fc292ef68cda5b8003.txt')
+@app.route('/30b9cf98b3ffad37dcb0739a5c5fa527.txt')
 def mailjet_verification():
-    return send_from_directory(app.static_folder, '5f7ed9ed49a424fc292ef68cda5b8003.txt', mimetype='text/plain')
+    return send_from_directory(app.static_folder, '30b9cf98b3ffad37dcb0739a5c5fa527.txt', mimetype='text/plain')
 
 @app.route('/<path:path>')
 def catch_all(path):
