@@ -1,38 +1,43 @@
 import os
-from mailjet_rest import Client
+import requests
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-api_key = os.environ.get('MJ_APIKEY_PUBLIC')
-api_secret = os.environ.get('MJ_APIKEY_PRIVATE')
+BREVO_API_KEY = os.environ.get('BREVO_API_KEY')
+SENDER_EMAIL = "bismakgustavo3@gmail.com"
+SENDER_NAME = "Ana Mercado"
 
 def send_verification_code(email, code):
     """
-    Sends a verification code using Mailjet API.
+    Sends a verification code using Brevo (formerly Sendinblue) API.
     """
-    if not api_key or not api_secret or "COLOQUE_AQUI" in api_secret:
-        print("Erro: Mailjet API Key ou Secret Key não configurada corretamente no .env")
+    if not BREVO_API_KEY:
+        print("Erro: BREVO_API_KEY não configurada no .env")
         return False
 
-    mailjet = Client(auth=(api_key, api_secret), version='v3.1')
+    url = "https://api.brevo.com/v3/smtp/email"
     
-    data = {
-      'Messages': [
-        {
-          "From": {
-            "Email": "bismakgustavo3@gmail.com", # Substitua pelo seu email verificado no Mailjet
-            "Name": "Ana Mercado"
-          },
-          "To": [
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "api-key": BREVO_API_KEY
+    }
+
+    payload = {
+        "sender": {
+            "name": SENDER_NAME,
+            "email": SENDER_EMAIL
+        },
+        "to": [
             {
-              "Email": email,
-              "Name": "Usuário"
+                "email": email,
+                "name": "Usuário"
             }
-          ],
-          "Subject": f"{code} é o seu código de verificação",
-          "HTMLPart": f"""
+        ],
+        "subject": f"{code} é o seu código de verificação",
+        "htmlContent": f"""
             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e1e7f0;">
                 <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); padding: 40px 20px; text-align: center;">
                     <h1 style="color: #ffffff; margin: 0; font-size: 28px; letter-spacing: -1px;">Ana Mercado</h1>
@@ -57,18 +62,16 @@ def send_verification_code(email, code):
                 </div>
             </div>
             """
-        }
-      ]
     }
-    
+
     try:
-        result = mailjet.send.create(data=data)
-        if result.status_code == 200:
-            print(f"Email enviado com sucesso via Mailjet para {email}")
+        response = requests.post(url, json=payload, headers=headers)
+        if response.status_code in [200, 201, 202]:
+            print(f"Email enviado com sucesso via Brevo para {email}")
             return True
         else:
-            print(f"Erro ao enviar e-mail via Mailjet: {result.status_code} - {result.json()}")
+            print(f"Erro ao enviar e-mail via Brevo: {response.status_code} - {response.text}")
             return False
     except Exception as e:
-        print(f"Exceção ao enviar e-mail via Mailjet: {e}")
+        print(f"Exceção ao enviar e-mail via Brevo: {e}")
         return False

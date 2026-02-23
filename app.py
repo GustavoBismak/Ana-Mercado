@@ -47,10 +47,6 @@ def serve_flutter_app():
         return redirect(url_for('admin_login'))
     return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/30b9cf98b3ffad37dcb0739a5c5fa527.txt')
-def mailjet_verification():
-    from flask import Response
-    return Response("", mimetype='text/plain')
 
 @app.route('/<path:path>')
 def catch_all(path):
@@ -580,7 +576,7 @@ def admin_forgot_password():
             db.session.add(reset_request)
             db.session.commit()
             
-            # Send email via Resend
+            # Send email via Brevo
             success = send_verification_code(email, code)
             
             if success:
@@ -667,7 +663,7 @@ def api_forgot_password():
     db.session.add(reset_request)
     db.session.commit()
     
-    # Send email via Resend
+    # Send email via Brevo
     success = send_verification_code(username, code)
     
     if success:
